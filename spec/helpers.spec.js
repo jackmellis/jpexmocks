@@ -91,12 +91,12 @@ describe('Base Class - Mock - Helpers', function(){
         callCount++;
         expect(sharedPromise).toBe($promise);
       });
-      Class.mock.beforeInvoke = function($promise, $log){
+      Class.mock.beforeInvoke(function($promise, $log){
         expect($promise).toBeDefined(); // Got from the Class
         expect($log).toBeDefined(); // Got from elsewhere
         callCount++;
         sharedPromise = $promise;
-      };
+      });
       new Class();
       expect(callCount).toBe(2);
     });
@@ -105,11 +105,11 @@ describe('Base Class - Mock - Helpers', function(){
       var Class = Master.extend(function($promise){
         callCount++;
       });
-      Class.mock.afterInvoke = function($promise, $log){
+      Class.mock.afterInvoke(function($promise, $log){
         expect($promise).toBeDefined();
         expect($log).toBeDefined();
         callCount++;
-      };
+      });
       new Class();
       expect(callCount).toBe(2);
     });
@@ -117,14 +117,14 @@ describe('Base Class - Mock - Helpers', function(){
       var Class = Master.extend(function($promise){
         expect($promise).toBe('gone!');
       });
-      Class.mock.beforeInvoke = function(){
+      Class.mock.beforeInvoke(function(){
         return {
           $promise : 'gone!'
         };
-      };
-      Class.mock.afterInvoke = function($promise){
+      });
+      Class.mock.afterInvoke(function($promise){
         expect($promise).toBe('gone!');
-      };
+      });
       
       new Class();
     });
@@ -133,12 +133,12 @@ describe('Base Class - Mock - Helpers', function(){
       var Class = Master.extend(function(){
         callCount++;
       });
-      Class.mock.beforeInvoke = function(){
+      Class.mock.beforeInvoke(function(){
         callCount++;
-      };
-      Class.mock.afterInvoke = function(){
+      });
+      Class.mock.afterInvoke(function(){
         callCount++;
-      };
+      });
       
       new Class();
       expect(callCount).toBe(3);
