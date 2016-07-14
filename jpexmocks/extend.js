@@ -79,7 +79,11 @@ module.exports = function(Base){
       instances : [],
       
       // Invoke wrappers
-      beforeInvoke : null,
-      afterInfoke : null
+      beforeInvoke : function(fn){
+        Base._mock.beforeInvoke = fn;
+      },
+      afterInvoke : function(fn){
+        Base._mock.afterInvoke = fn;
+      }
     };
 };
