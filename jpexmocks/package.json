@@ -5,12 +5,13 @@
   "main": "index.js",
   "devDependencies": {
     "istanbul": "^0.4.3",
-    "jasmine-node": "^1.14.5"
+    "jasmine-node": "^1.14.5",
+    "jpex": "^1.0.1"
   },
   "scripts": {
     "cover": "istanbul cover --include-all-sources .\\node_modules\\jasmine-node\\bin\\jasmine-node ../spec",
     "spec": "jasmine-node ../spec --autotest --watch ../jpexmocks --color"
   },
-  "author": "",
+  "author": "Jack Ellis",
   "license": "ISC"
 }
