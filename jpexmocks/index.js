@@ -52,14 +52,14 @@ module.exports = function(Base){
         if (NewClass.mock && NewClass.mock.instances){
           NewClass.mock.instances.push(this);
         }
-        if (NewClass.mock && typeof NewClass.mock.beforeInvoke === 'function'){
+        if (NewClass._mock && typeof NewClass._mock.beforeInvoke === 'function'){
           // Grab dependencies required by the beforeInvoke function
           deps = internal.extractParameters(NewClass.mock.beforeInvoke);
           params = NewClass.NamedParameters(args);
           newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
         
           // Invoke the function
-          newArgs = NewClass.mock.beforeInvoke.apply(this, newArgs);
+          newArgs = NewClass._mock.beforeInvoke.apply(this, newArgs);
           
           if (newArgs){
             args = internal.resolveDependencies(NewClass, {dependencies : NewClass.Dependencies}, newArgs);
@@ -70,13 +70,13 @@ module.exports = function(Base){
           result = constructor.apply(this, args);
         }
         
-        if (NewClass.mock && typeof NewClass.mock.afterInvoke === 'function'){
+        if (NewClass._mock && typeof NewClass._mock.afterInvoke === 'function'){
           // Grab dependencies required by the afterInvoke function
           deps = internal.extractParameters(NewClass.mock.afterInvoke);
           params = NewClass.NamedParameters(args);
           newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
           
-          NewClass.mock.afterInvoke.apply(this, newArgs);
+          NewClass._mock.afterInvoke.apply(this, newArgs);
         }
         
         return result;
