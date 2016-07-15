@@ -88,6 +88,7 @@ module.exports = function(Base){
     
       var NewClass = Base._mock.extend.call(this, opt);
       extend(NewClass);
+      NewClass._mock.extend = Base._mock.extend;
       
       this.mock.children.push(NewClass);
       return NewClass;
