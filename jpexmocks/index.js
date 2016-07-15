@@ -54,7 +54,7 @@ module.exports = function(Base){
         }
         if (NewClass._mock && typeof NewClass._mock.beforeInvoke === 'function'){
           // Grab dependencies required by the beforeInvoke function
-          deps = internal.extractParameters(NewClass.mock.beforeInvoke);
+          deps = internal.extractParameters(NewClass._mock.beforeInvoke);
           params = NewClass.NamedParameters(args);
           newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
         
@@ -72,7 +72,7 @@ module.exports = function(Base){
         
         if (NewClass._mock && typeof NewClass._mock.afterInvoke === 'function'){
           // Grab dependencies required by the afterInvoke function
-          deps = internal.extractParameters(NewClass.mock.afterInvoke);
+          deps = internal.extractParameters(NewClass._mock.afterInvoke);
           params = NewClass.NamedParameters(args);
           newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
           

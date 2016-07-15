@@ -283,5 +283,11 @@ describe('Base Class - Mock', function(){
       expect(console.warn).not.toHaveBeenCalled();
       expect(console.error).not.toHaveBeenCalled();
     });
+    it('should track logged messages', function(){
+      var $log = mock.get('$log');
+      expect($log.messages.length).toBe(0);
+      $log('hello');
+      expect($log.messages.length).toBe(1);
+    });
   });
 });

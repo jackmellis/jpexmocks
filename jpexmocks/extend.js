@@ -29,6 +29,16 @@ module.exports = function(Base){
         Base.Register[type].apply(Base, arguments);
       },
       
+      // Revert a single dependency
+      unset : function(name){
+        if (!Base._mock.factories[name] || Base._mock.factories[name] === true){
+          delete Base._factories[name];
+        }else{
+          Base._factories[name] = Base._mock.factories[name];
+        }
+        delete Base._mock.factories[name];
+      },
+      
       // Inject a series of dependencies
       inject : function(fn){
         var self = this;
@@ -48,11 +58,7 @@ module.exports = function(Base){
       reset : function(deep){
         // Replace all mocked dependencies
         Object.keys(Base._mock.factories).forEach(function(f){
-          if (Base._mock.factories[f] === true){
-            delete Base._factories[f];
-          }else{
-            Base._factories[f] = Base._mock.factories[f];
-          }
+          Base.mock.unset(f);
         });
 
         // Replace the extend function
