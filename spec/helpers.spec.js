@@ -38,6 +38,29 @@ describe('Base Class - Mock - Helpers', function(){
     });
   });
   
+  describe('Descendants', function(){
+    it('should return children', function(){
+      expect(Master.mock.descendants).toBeDefined();
+      expect(Master.mock.descendants.length).toBe(0);
+      var Second = Master.extend();
+      var Third = Master.extend();
+      expect(Master.mock.descendants.length).toBe(2);
+      expect(Second.mock.descendants.length).toBe(0);
+      expect(Third.mock.descendants.length).toBe(0);
+    });
+    it('should return children\'s children', function(){
+      var Second = Master.extend();
+      var Third = Master.extend();
+      var Fourth = Second.extend();
+      var Fifth = Fourth.extend();
+      expect(Master.mock.descendants.length).toBe(4);
+      expect(Second.mock.descendants.length).toBe(2);
+      expect(Third.mock.descendants.length).toBe(0);
+      expect(Fourth.mock.descendants.length).toBe(1);
+      expect(Fifth.mock.descendants.length).toBe(0);
+    });
+  });
+  
   describe('Instances', function(){
     beforeEach(function(){
       // Instances are only registered on sub classes of the mocked object

@@ -92,4 +92,15 @@ module.exports = function(Base){
         Base._mock.afterInvoke = fn;
       }
     };
+  
+  Object.defineProperties(Base.mock, 
+  {
+    descendants : {
+      get : function(){
+        var direct = Base.mock.children;
+        var indirect = direct.map(m => m.mock.descendants);
+        return Array.prototype.concat.apply(direct, indirect).filter((m, i, arr) => arr.indexOf(m) === i);
+      }
+    }
+  });
 };
