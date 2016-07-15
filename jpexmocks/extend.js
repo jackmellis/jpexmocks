@@ -39,6 +39,12 @@ module.exports = function(Base){
         delete Base._mock.factories[name];
       },
       
+      // Revert the default mocked dependencies
+      unsetDefaults : function(){
+        ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise']
+        .forEach(Base.mock.unset);
+      },
+      
       // Inject a series of dependencies
       inject : function(fn){
         var self = this;

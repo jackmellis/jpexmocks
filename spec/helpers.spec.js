@@ -172,4 +172,18 @@ describe('Base Class - Mock - Helpers', function(){
       expect(callCount).toBe(1);
     });
   });
+  
+  describe('Unset Defaults', function(){
+    it('should unset all defaults', function(){
+      var $promise = Master.mock.get('$promise');
+      var $promise2 = Master.mock.get('$promise');
+      expect($promise).toBe($promise2);
+      
+      Master.mock.unsetDefaults();
+      
+      var $promise3 = Master.mock.get('$promise');
+      
+      expect($promise).not.toBe($promise3);
+    });
+  });
 });
