@@ -6,7 +6,7 @@ module.exports = function(){
     
     var hasError, error, value = unresolvedObject;
     
-    return promise.then(function(){
+    return promise._firstThen(function(){
       // Run the constructor function
       return fn(function(v){
         value = v || null;
@@ -72,22 +72,25 @@ module.exports = function(){
   };
   
   $promise.flush = function(){
-    // Flush the promises
-    this.promises.forEach(function(p){
-      if (p.state === 'pending' || p.state === 'unresolved'){
-        try{
-          p.flush();
-        }
-        catch(e){}
-      }
-    });
+    var prestate;
+    var poststate = this.promises.map(p => p.state).join('-');
     
-    //Reset the promises
-    this.promises.forEach(function(p){
-      if (p.state === 'unresolved'){
-        p.state = 'pending';
-      }
-    });
+    // Keep going until there are no state changes
+    while (poststate !== prestate){
+      prestate = poststate;
+      
+      // Flush the promises
+      this.promises.forEach(function(p){
+        if (p.state === 'pending' || p.state === 'unresolved'){
+          try{
+            p.flush();
+          }
+          catch(e){}
+        }
+      });
+    
+      poststate = this.promises.map(p => p.state).join('-');
+    }
   };
   
   return $promise;
@@ -98,6 +101,10 @@ function PromiseClass(){
   this.state = 'pending';
   this.resolvedWith = null;
 }
+PromiseClass.prototype._firstThen = function(onResolve, onReject){
+  this.queue.push({then : onResolve, catch : onReject, isFirst : true});
+  return this;
+};
 PromiseClass.prototype.then = function(onResolve, onReject){
   this.queue.push({then : onResolve, catch : onReject});
   return this;
@@ -109,14 +116,14 @@ PromiseClass.prototype.catch = function(onReject){
 PromiseClass.prototype.flush = function(){
   switch(this.state){
   case 'fulfilled':
-  case 'unresolved':
+//  case 'unresolved':
     return this.resolvedWith;
   case 'rejected':
     throw this.resolvedWith;
   }
 
   var val, err, hasError;
-  this.queue = this.queue.filter(function(q){
+  this.queue = this.queue.filter((q) => {
     if (val === unresolvedObject){
       return true; //Keep this as it's not been resolved yet
     }
@@ -126,18 +133,29 @@ PromiseClass.prototype.flush = function(){
         val = q.catch(err);
         err = null;
         hasError = false;
-      }else if (!err && q.then){
+      }else if (!hasError && q.then){
         val = q.then(val);
       }
-
-      if (val && typeof val.then === 'function' && typeof val.flush === 'function'){
-        val = val.flush();
+      
+      if (!q.isFirst && val && typeof val.then === 'function' && typeof val.catch === 'function'){
+        // We've been passed a promise so we need to wait for it to resolve...
+        var newPromise = val;
+        q.then = function(){
+          return newPromise.flush();
+        };
+        q.catch = null;
+        val = unresolvedObject;
+        return true;
       }
     }
     catch(e){
       val = null;
       err = e;
       hasError = true;
+    }
+    
+    if (val === unresolvedObject){
+      return true;
     }
     
     return false;

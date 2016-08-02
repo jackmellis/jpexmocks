@@ -193,15 +193,13 @@ describe('Base Class - Mock - $promise', function(){
       expect(callCount).toBe(1);
     });
     it('should pick up unresolved then statements on the next pass', function(){
-      var shouldResolve = false;
+      var resolver;
       var callCount = 0;
       
       constructor = function($promise){
         $promise(function(resolve){
           callCount++;
-          if (shouldResolve){
-            resolve();
-          }
+          resolver = resolve;
         })
         .then(function(){
           callCount++;
@@ -216,7 +214,7 @@ describe('Base Class - Mock - $promise', function(){
       
       expect(callCount).toBe(1);
       
-      shouldResolve = true;
+      resolver();
       
       $promise.flush();
       
