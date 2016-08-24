@@ -102,6 +102,7 @@ module.exports = function(Base){
   Base.mock.set('$tick', mockables.$timeout, true);
   Base.mock.set('$log', mockables.$log, true);
   Base.mock.set('$promise', mockables.$promise, true);
+  Base.mock.set('$fs', mockables.$fs, true);
   
   return Base.mock;
 };
