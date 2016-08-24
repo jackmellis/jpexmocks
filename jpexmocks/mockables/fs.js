@@ -11,7 +11,7 @@ module.exports = function($promise){
     return p(function(rs){
       var fn = $fs.access.paths[path];
       if (!fn){
-        throw new Error('Unexpected access request:', path);
+        throw new Error('Unexpected access request: ' + path);
       }
       var result = fn();
       return rs(result);
@@ -26,4 +26,6 @@ module.exports = function($promise){
   $fs.flush = function(){
     promises.forEach(p => p.flush());
   };
+  
+  return $fs;
 };

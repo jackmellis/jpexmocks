@@ -41,7 +41,7 @@ module.exports = function(Base){
       
       // Revert the default mocked dependencies
       unsetDefaults : function(){
-        ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise']
+        ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise', '$fs']
         .forEach(Base.mock.unset);
       },
       
