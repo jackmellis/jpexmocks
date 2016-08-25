@@ -26,8 +26,10 @@ module.exports = function($promise){
   
   var findWhenable = function(args, paths){
     paths = paths
-    .filter(p => p.length === args.length)
-    .filter(p => p.fn && p.filter((arg, i) => areEqual(arg, args[i])).length === p.length);
+      .slice()
+      .reverse()
+      .filter(p => p.fn && p.filter((arg, i) => areEqual(arg, args[i])).length === p.length);
+    
     if (!paths.length){
       throw new Error('Unexpected request: ' + args.toString());
     }
@@ -38,10 +40,13 @@ module.exports = function($promise){
     if (a == b){
       return true;
     }
+    if (a instanceof RegExp && typeof b === 'string'){
+      return a.test(b);
+    }
     if (a && b && typeof a === 'object' && typeof b === 'object'){
       var keys = Object.keys(a)
         .concat(Object.keys(b))
-        .filter((a, i, r) => r.indexOf(a) === i);
+        .filter((a, i, r) => r.indexOf(a) === i); // Deduplicate
       
       return keys.filter(k => areEqual(a[k], b[k])).length == keys.length;
     }
@@ -50,6 +55,14 @@ module.exports = function($promise){
   
   var $fs = {};
   $fs.access = createWhenableFunction();
+  $fs.appendFile = createWhenableFunction();
+  $fs.chmod = createWhenableFunction();
+  $fs.chown = createWhenableFunction();
+  $fs.close = createWhenableFunction();
+  $fs.exists = createWhenableFunction();
+  
+  // readStream
+  
   
   $fs.flush = function(){
     promises.forEach(p => p.flush());
