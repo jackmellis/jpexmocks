@@ -9,7 +9,7 @@ module.exports = function(){
     return promise._firstThen(function(){
       // Run the constructor function
       return fn(function(v){
-        value = v || null;
+        value = v;
       }, function(err){
         error = err;
         hasError = true;
