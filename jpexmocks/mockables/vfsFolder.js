@@ -1,16 +1,35 @@
-module.exports = function(vfsFile){
+module.exports = function($vfsFile){
   var Folder = function(obj){
-    this.name = '';
+    obj = obj || {};
+    obj.contents = obj.contents || {};
+    this.name = obj.name || '';
     this.folders = {};
     this.files = {};
     
-    this.add(obj);
+    this.atime = obj.atime || new Date(); // accessed time
+    this.ctime = obj.ctime || new Date(); // changed permissions time
+    this.mtime = obj.mtime || new Date(); // modified time
+    this.birthtime = obj.birthtime || new Date(); // created time
+    
+    this.add(obj.contents);
   };
   Folder.prototype.add = function(obj){
     var self = this;
     
+    if (obj instanceof $vfsFile || obj instanceof Folder){
+      if (!obj.name){
+        return;
+      }
+      
+      var n = obj.name;
+      var o = obj;
+      obj = {};
+      obj[n] = o;
+    }
+    
     Object.keys(obj).forEach(function(name){
       var value = obj[name];
+      var fileObj;
       
       // For elements like a/b/c
       var nameFolders = name.split('/');
@@ -21,7 +40,7 @@ module.exports = function(vfsFile){
         if (self.folders[n]){
           self.folders[n].add(newFolder);
         }else{
-          self.folders[n] = new Folder(newFolder);
+          self.folders[n] = Folder.quick(newFolder);
           self.folders[n].name = n;
         }
         return;
@@ -32,17 +51,20 @@ module.exports = function(vfsFile){
         // already a folder
         self.folders[name] = value;
         self.folders[name].name = name;
-      }else if (value instanceof vfsFile){
+      }else if (value instanceof $vfsFile){
         // already a file
         self.files[name] = value;
         self.files[name].name = name;
       }else if (typeof value === 'string'){
         // assume it's a text file
-        var fileObj = {name : name, contents : value, encoding : 'utf8'};
-        self.files[name] = new vfsFile(fileObj);
+        fileObj = {name : name, contents : value, encoding : 'utf8'};
+        self.files[name] = new $vfsFile(fileObj);
+      }else if (value instanceof Buffer){
+        fileObj = {name : name, contents : value, encoding : 'binary'};
+        self.files[name] = new $vfsFile(fileObj);
       }else if (value && typeof value === 'object'){
         // new folder
-        self.folders[name] = new Folder(value);
+        self.folders[name] = Folder.quick(value);
         self.folders[name].name = name;
       }else{
         // not sure what it is!
@@ -61,6 +83,10 @@ module.exports = function(vfsFile){
       }
     }
     return found;
+  };
+  
+  Folder.quick = function(obj){
+    return new Folder({contents : obj});
   };
   
   return Folder;
