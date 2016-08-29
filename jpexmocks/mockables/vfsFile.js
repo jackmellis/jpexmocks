@@ -8,6 +8,7 @@ module.exports = function(){
     this.ctime = obj.ctime || new Date(); // changed permissions time
     this.mtime = obj.mtime || new Date(); // modified time
     this.birthtime = obj.birthtime || new Date(); // created time
+    this.folder = obj.folder || null;
     
     this.name = obj.name || '';
     this.encoding = obj.encoding || 'utf8';

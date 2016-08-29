@@ -3,6 +3,8 @@ module.exports = function($vfsFile){
     obj = obj || {};
     obj.contents = obj.contents || {};
     this.name = obj.name || '';
+    this.folder = obj.folder || null;
+    
     this.folders = {};
     this.files = {};
     
@@ -42,6 +44,7 @@ module.exports = function($vfsFile){
         }else{
           self.folders[n] = Folder.quick(newFolder);
           self.folders[n].name = n;
+          self.folders[n].folder = self;
         }
         return;
       }
@@ -51,21 +54,24 @@ module.exports = function($vfsFile){
         // already a folder
         self.folders[name] = value;
         self.folders[name].name = name;
+        self.folders[name].folder = self;
       }else if (value instanceof $vfsFile){
         // already a file
         self.files[name] = value;
         self.files[name].name = name;
+        self.files[name].folder = self;
       }else if (typeof value === 'string'){
         // assume it's a text file
-        fileObj = {name : name, contents : value, encoding : 'utf8'};
+        fileObj = {name : name, contents : value, encoding : 'utf8', folder : self};
         self.files[name] = new $vfsFile(fileObj);
       }else if (value instanceof Buffer){
-        fileObj = {name : name, contents : value, encoding : 'binary'};
+        fileObj = {name : name, contents : value, encoding : 'binary', folder : self};
         self.files[name] = new $vfsFile(fileObj);
       }else if (value && typeof value === 'object'){
         // new folder
         self.folders[name] = Folder.quick(value);
         self.folders[name].name = name;
+        self.folders[name].folder = self;
       }else{
         // not sure what it is!
       }
