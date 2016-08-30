@@ -13,5 +13,8 @@
     "spec": "jasmine-node ../spec --autotest --watch ../jpexmocks --color"
   },
   "author": "Jack Ellis",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "mock-fs": "^3.11.0"
+  }
 }
