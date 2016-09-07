@@ -2,6 +2,7 @@ Jpex Mocks
 ===========
 Mocking Library for Jpex
 ------------------------
+[![Build Status](https://travis-ci.org/jackmellis/jpexmocks.svg?branch=master)](https://travis-ci.org/jackmellis/jpexmocks)
 
 This is intended to be used when unit testing using the Jpex class framework. It adds several extra features to your classes so that you can easily mock out and test your classes.
 
