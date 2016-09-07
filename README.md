@@ -184,6 +184,24 @@ var instance = new MyClass();
 $log.messages.length === 1;
 ```
 
+####$fs  
+The [$fs](https://github.com/jackmellis/jpex/jpex-fs) factory is mocked out and made syncronous. All IO operations are made on a dummy file structure you provide. In the background this uses [mock-fs](https://github.com/tschaub/mock-fs) to mock out Node's *fs* module. Use the $fs.use function to provide your mock file system. For more information about the structure of this object, see the documentation for mock-fs. As with $promise, use $fs's flush method to resolve its calls.
+```javascript
+var $fs = MyClass.mock.get('$fs');
+$fs.use({
+  'lib/img/img1.png',
+  'lib/img/img2.png'
+});
+
+$fs.readdir('./lib/img')
+  .then(function(){})
+  .catch(function(){});
+$fs.flush();
+
+// As $fs is promise-based you can also flush your methods using $promise.flush();
+MyClass.mock.get('$promise').flush();
+```
+
 If you want to restore the original version of these factories, you can use `unset` to undo them individually, or `unsetDefaults` to restore them all.
 ```javascript
 mock(MyClass);
