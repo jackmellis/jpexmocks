@@ -1,4 +1,4 @@
-var internal = require('jpex/internal');
+var resolver = require('jpex/lib/resolver');
 
 module.exports = function(Base){
     Base._mock = {};
@@ -10,7 +10,7 @@ module.exports = function(Base){
       var obj = {
         dependencies : name
       };
-      var result = internal.resolveDependencies(Base, obj);
+      var result = resolver.resolveDependencies(Base, obj);
       
       if (!Array.isArray(name)){
         result = result[0];
@@ -41,14 +41,14 @@ module.exports = function(Base){
       
       // Revert the default mocked dependencies
       unsetDefaults : function(){
-        ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise']
+        ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise', '$fs']
         .forEach(Base.mock.unset);
       },
       
       // Inject a series of dependencies
       inject : function(fn){
         var self = this;
-        var dependencies = internal.extractParameters(fn);
+        var dependencies = resolver.extractParameters(fn);
         var args = this.get(dependencies);
 
         var result = fn.apply(this, args);

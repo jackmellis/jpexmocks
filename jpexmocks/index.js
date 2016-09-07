@@ -1,6 +1,6 @@
 var mockables = require('./mockables');
 var extend = require('./extend');
-var internal = require('jpex/internal');
+var resolver = require('jpex/lib/resolver');
 
 module.exports = function(Base){
   if (!Base){
@@ -20,7 +20,7 @@ module.exports = function(Base){
         case 'function':
           opt = {};
           constructor = arg;
-          dependencies = internal.extractParameters(constructor);
+          dependencies = resolver.extractParameters(constructor);
           invokeParent = false;
           break;
         case 'object':
@@ -31,7 +31,7 @@ module.exports = function(Base){
             constructor = null;
           }
           if (constructor && !dependencies){
-            dependencies = internal.extractParameters(constructor);
+            dependencies = resolver.extractParameters(constructor);
           }
           invokeParent = arg.invokeParent;
           if (invokeParent === undefined && !constructor){
@@ -54,15 +54,15 @@ module.exports = function(Base){
         }
         if (NewClass._mock && typeof NewClass._mock.beforeInvoke === 'function'){
           // Grab dependencies required by the beforeInvoke function
-          deps = internal.extractParameters(NewClass._mock.beforeInvoke);
+          deps = resolver.extractParameters(NewClass._mock.beforeInvoke);
           params = NewClass.NamedParameters(args);
-          newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
+          newArgs = resolver.resolveDependencies(NewClass, {dependencies : deps}, params);
         
           // Invoke the function
           newArgs = NewClass._mock.beforeInvoke.apply(this, newArgs);
           
           if (newArgs){
-            args = internal.resolveDependencies(NewClass, {dependencies : NewClass.Dependencies}, newArgs);
+            args = resolver.resolveDependencies(NewClass, {dependencies : NewClass.Dependencies}, newArgs);
           }
         }
         
@@ -72,9 +72,9 @@ module.exports = function(Base){
         
         if (NewClass._mock && typeof NewClass._mock.afterInvoke === 'function'){
           // Grab dependencies required by the afterInvoke function
-          deps = internal.extractParameters(NewClass._mock.afterInvoke);
+          deps = resolver.extractParameters(NewClass._mock.afterInvoke);
           params = NewClass.NamedParameters(args);
-          newArgs = internal.resolveDependencies(NewClass, {dependencies : deps}, params);
+          newArgs = resolver.resolveDependencies(NewClass, {dependencies : deps}, params);
           
           NewClass._mock.afterInvoke.apply(this, newArgs);
         }
@@ -102,6 +102,7 @@ module.exports = function(Base){
   Base.mock.set('$tick', mockables.$timeout, true);
   Base.mock.set('$log', mockables.$log, true);
   Base.mock.set('$promise', mockables.$promise, true);
+  Base.mock.set('$fs', mockables.$fs, true);
   
   return Base.mock;
 };
