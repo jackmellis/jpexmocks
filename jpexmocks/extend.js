@@ -7,15 +7,15 @@ module.exports = function(Base){
     Base.mock = {
       // Get a single dependency
       get : function(name){
-      var obj = {
-        dependencies : name
-      };
-      var result = resolver.resolveDependencies(Base, obj);
-      
-      if (!Array.isArray(name)){
-        result = result[0];
-      }
-      return result;
+        var obj = {
+          dependencies : name
+        };
+        var result = resolver.resolveDependencies(Base, obj);
+
+        if (!Array.isArray(name)){
+          result = result[0];
+        }
+        return result;
       },
     
       // Set a single dependency
@@ -26,7 +26,9 @@ module.exports = function(Base){
           Base._mock.factories[name] = Base._factories[name] || true;
         }
 
-        Base.Register[type].apply(Base, arguments);
+        var f = Base.Register[type].apply(Base, arguments);
+        
+        return f;
       },
       
       // Revert a single dependency
@@ -59,6 +61,9 @@ module.exports = function(Base){
           });
         }
       },
+      
+      create : function(){},
+      freeze : function(){},
       
       // Remove all mock properties from the class
       reset : function(deep){
