@@ -62,7 +62,38 @@ module.exports = function(Base){
         }
       },
       
-      create : function(){},
+      create : function(name){
+        var count = 101;
+        var interface = Base._getInterface(name);
+        if (!interface){
+          return Base.mock.get(name);
+        }
+        
+        return createInterfaceObj(interface);
+        
+        function createInterfaceObj(pattern){
+          switch(Base.Typeof(pattern)){
+            case 'string':
+              return 'string ' + (count++);
+            case 'number':
+              return count++;
+            case 'null':
+              return null;
+            case 'undefined':
+              return;
+            case 'regexp':
+              return (/abc/g);
+            case 'date':
+              return new Date();
+            case 'function':
+              var fn = (function(){});
+              
+              return fn;
+            case 'array':
+            case 'object':
+          }
+        }
+      },
       freeze : function(){},
       
       // Remove all mock properties from the class
