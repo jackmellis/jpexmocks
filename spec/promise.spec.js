@@ -4,7 +4,7 @@ var grequire = require('./grequire');
 
 describe('Base Class - Mock - $promise', function(){
   var Base, Master, Mock, constructor, $promise;
-  
+
   beforeEach(function(){
     Base = grequire('node_modules/jpex');
     Master = Base.extend(function($promise){
@@ -13,10 +13,10 @@ describe('Base Class - Mock - $promise', function(){
     constructor = function(){};
     Mock = grequire('.');
     Mock(Master);
-    
+
     $promise = Master.mock.get('$promise');
   });
-  
+
   it('should inject a mock promise factory', function(){
     constructor = function($promise){
       expect($promise).toBeDefined();
@@ -24,11 +24,11 @@ describe('Base Class - Mock - $promise', function(){
     };
     new Master();
   });
-  
+
   describe('$promise', function(){
     it('should create and resolve a promise', function(){
       var result;
-    
+
       constructor = function($promise){
         $promise(function(resolve){
           resolve('tada');
@@ -38,12 +38,12 @@ describe('Base Class - Mock - $promise', function(){
         });
       };
       new Master();
-      
+
       $promise.flush();
-      
+
       expect(result).toBe('tada');
     });
-    it('should create and reject a promise', function(){      
+    it('should create and reject a promise', function(){
       constructor = function($promise){
         var result = $promise(function(resolve, reject){
           reject('error');
@@ -55,7 +55,7 @@ describe('Base Class - Mock - $promise', function(){
     });
     it('should catch a rejected promise', function(){
       var result;
-    
+
       constructor = function($promise){
         $promise(function(resolve, reject){
           reject('error');
@@ -65,14 +65,14 @@ describe('Base Class - Mock - $promise', function(){
         });
       };
       new Master();
-      
+
       $promise.flush();
-      
+
       expect(result).toBe('error');
     });
     it('should not resolve the promise until flushed', function(){
       var result;
-    
+
       constructor = function($promise){
         $promise(function(resolve){
           resolve('tada');
@@ -82,16 +82,16 @@ describe('Base Class - Mock - $promise', function(){
         });
       };
       new Master();
-      
+
       expect(result).toBe(undefined);
-      
+
       $promise.flush();
-      
+
       expect(result).toBe('tada');
     });
     it('should chain multiple then statements', function(){
       var result;
-      
+
       constructor = function($promise){
         $promise(function(resolve){
           resolve('a');
@@ -108,12 +108,12 @@ describe('Base Class - Mock - $promise', function(){
       };
       new Master();
       $promise.flush();
-      
+
       expect(result).toBe('abc');
     });
     it('should skip all thens until a catch is encountered', function(){
       var callCount = 0;
-      
+
       constructor = function($promise){
         $promise(function(resolve){
           callCount++;
@@ -136,10 +136,10 @@ describe('Base Class - Mock - $promise', function(){
           callCount++;
         });
       };
-      
+
       new Master();
       $promise.flush();
-      
+
       expect(callCount).toBe(4);
     });
     it('should flush promises made within promises', function(){
@@ -167,10 +167,10 @@ describe('Base Class - Mock - $promise', function(){
           callCount++;
         });
       };
-      
+
       new Master();
       $promise.flush();
-      
+
       expect(callCount).toBe(6);
     });
     it('should not resolve then statements of unresolved promises', function(){
@@ -186,16 +186,16 @@ describe('Base Class - Mock - $promise', function(){
           callCount++;
         });
       };
-      
+
       new Master();
       $promise.flush();
-      
+
       expect(callCount).toBe(1);
     });
     it('should pick up unresolved then statements on the next pass', function(){
       var resolver;
       var callCount = 0;
-      
+
       constructor = function($promise){
         $promise(function(resolve){
           callCount++;
@@ -208,20 +208,46 @@ describe('Base Class - Mock - $promise', function(){
           callCount++;
         });
       };
-      
+
       new Master();
       $promise.flush();
-      
+
       expect(callCount).toBe(1);
-      
+
       resolver();
-      
+
       $promise.flush();
-      
+
       expect(callCount).toBe(3);
     });
+
+    it('should flush promises added to a completed promise', function(){
+      var p = $promise(resolve => resolve(1));
+      $promise.flush();
+
+      var result;
+      p.then(d => {
+        result = d + 1
+      });
+      $promise.flush();
+
+      expect(result).toBe(2);
+    });
+    it('should flush promises added to a rejected promise', function(){
+      var p =$promise((resolve, reject) => reject(1));
+      $promise.flush();
+console.log(p);
+      var result;
+      p
+        .then(d => result = console.log(d) || d * 10)
+        .catch(d => result = console.log(d) || d + 1);
+        console.log(p);
+      $promise.flush();
+
+      expect(result).toBe(2);
+    });
   });
-  
+
   describe('Resolve', function(){
     it('should return a resolved promise', function(){
       var result;
@@ -230,11 +256,11 @@ describe('Base Class - Mock - $promise', function(){
         result = v;
       });
       $promise.flush();
-      
+
       expect(result).toBe(1234);
     });
   });
-  
+
   describe('Reject', function(){
     it('should return a rejected promise', function(){
       var result;
@@ -243,11 +269,11 @@ describe('Base Class - Mock - $promise', function(){
         result = v;
       });
       $promise.flush();
-      
+
       expect(result).toBe(1234);
     });
   });
-  
+
   describe('All', function(){
     it('should resolve all promises and return the results', function(){
       var result;
@@ -262,14 +288,14 @@ describe('Base Class - Mock - $promise', function(){
         }),
         9999
       ];
-      
+
       $promise.all(arr)
       .then(function(r){
         result = r;
       });
-      
+
       $promise.flush();
-      
+
       expect(result).toEqual(expected);
     });
     it('should stop if any promises are rejected', function(){
@@ -291,13 +317,30 @@ describe('Base Class - Mock - $promise', function(){
       .catch(function(err){
         result = err;
       });
-      
+
       $promise.flush();
-      
+
       expect(result).toEqual(expected);
     });
+
+    it('should resolve multiple promises', function(){
+      var resolved;
+
+      $promise.all([
+        $promise(resolve => resolve()),
+        $promise(resolve => resolve()),
+        $promise(resolve => resolve()).then(() => true)
+      ])
+      .then(function(){
+        resolved = true;
+      });
+
+      $promise.flush();
+
+      expect(resolved).toBe(true);
+    });
   });
-  
+
   describe('Race', function(){
     it('should stop as soon as any promise is resolved', function(){
       var result;
@@ -310,14 +353,14 @@ describe('Base Class - Mock - $promise', function(){
         }),
         $promise(function(){})
       ];
-      
+
       $promise.race(arr)
       .then(function(val){
         result = val;
       });
-      
+
       $promise.flush();
-            
+
       expect(result).toBe(expected);
     });
     it('should stop as soon as any promise is rejected', function(){
@@ -333,18 +376,18 @@ describe('Base Class - Mock - $promise', function(){
         }),
         $promise(function(){})
       ];
-      
+
       $promise.race(arr)
       .catch(function(val){
         result = val;
       });
-      
+
       $promise.flush();
-            
+
       expect(result).toBe(expected);
     });
   });
-  
+
   it('should reset the number of promises between tests', function(){
     expect($promise.promises.length).toBe(0);
   });
