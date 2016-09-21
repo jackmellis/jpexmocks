@@ -3,6 +3,9 @@ Jpex Mocks
 Mocking Library for Jpex
 ------------------------
 [![Build Status](https://travis-ci.org/jackmellis/jpexmocks.svg?branch=master)](https://travis-ci.org/jackmellis/jpexmocks)
+[![npm version](https://badge.fury.io/js/jpexmocks.svg)](https://badge.fury.io/js/jpexmocks)
+[![Code Climate](https://codeclimate.com/github/jackmellis/jpexmocks/badges/gpa.svg)](https://codeclimate.com/github/jackmellis/jpexmocks)
+[![Test Coverage](https://codeclimate.com/github/jackmellis/jpexmocks/badges/coverage.svg)](https://codeclimate.com/github/jackmellis/jpexmocks/coverage)
 
 This is intended to be used when unit testing using the Jpex class framework. It adds several extra features to your classes so that you can easily mock out and test your classes.
 
@@ -17,19 +20,19 @@ describe('Test Suite', function(){
     mock = require('jpexmocks');
 
     MyClass = require('./myclassdeclration'),
-    
+
     mock(MyClass); // From this point, anything that extends MyClass will be mocked out
 
     systemUnderTest = require('./service/thingy');
   });
-  
+
   afterEach(function(){
     MyClass.mock.reset(true); // Reset everthing back to a pre-mocked state
   });
 
   it('should test using jpexmocks', function(){
     var service;
-  
+
     // Inject dependencies into the class
     MyClass.mock.inject(function(myService){
       service = myService;
@@ -38,14 +41,14 @@ describe('Test Suite', function(){
         $log : function(){}
       };
     });
-    
+
     // Run functions before and after instantiating the class
     MyClass.mock.afterInvoke(function(){
       expect(this.property).toBe(true);
     });
-    
+
     systemUnderTest.go();
-    
+
     expect(service.doSomething).toHaveBeenCalled(); // etc.
   });
 });
@@ -107,7 +110,7 @@ The function parameters will be resolved and injected. You can then return an ob
 ```javascript
 MyClass.mock.inject(function(mySingletonService){
   mySingletonService.something = function(){};
-  
+
   return {
     $log : function(){}
   };
@@ -135,7 +138,7 @@ The context (this) will be the instance.
 MyClass.beforeInvoke(function(myServiceInstance){
   myServiceInstance.something = function(){};
   this.someProperty = 'mocked out';
-  
+
   return {
     $log : function(){}
   };
