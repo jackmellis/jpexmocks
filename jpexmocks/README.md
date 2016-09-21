@@ -17,19 +17,19 @@ describe('Test Suite', function(){
     mock = require('jpexmocks');
 
     MyClass = require('./myclassdeclration'),
-    
+
     mock(MyClass); // From this point, anything that extends MyClass will be mocked out
 
     systemUnderTest = require('./service/thingy');
   });
-  
+
   afterEach(function(){
     MyClass.mock.reset(true); // Reset everthing back to a pre-mocked state
   });
 
   it('should test using jpexmocks', function(){
     var service;
-  
+
     // Inject dependencies into the class
     MyClass.mock.inject(function(myService){
       service = myService;
@@ -38,14 +38,14 @@ describe('Test Suite', function(){
         $log : function(){}
       };
     });
-    
+
     // Run functions before and after instantiating the class
     MyClass.mock.afterInvoke(function(){
       expect(this.property).toBe(true);
     });
-    
+
     systemUnderTest.go();
-    
+
     expect(service.doSomething).toHaveBeenCalled(); // etc.
   });
 });
@@ -107,11 +107,33 @@ The function parameters will be resolved and injected. You can then return an ob
 ```javascript
 MyClass.mock.inject(function(mySingletonService){
   mySingletonService.something = function(){};
-  
+
   return {
     $log : function(){}
   };
 });
+```
+
+####create  
+The create method is similar to the `get` method except that if you provide an *interface*, it will create a new object using the interface as a pattern.  
+```javascript
+MyClass.Register.Interface('iService', i => ({a : i.string, b : i.object, c : i.either(i.string, i.number)}));
+
+var s = MyClass.mock.create('iService');
+
+// s = {a : 'string 101', b : {}, c : 102}
+```
+This allows you to mock out a service without having to manually create every property it contains.  
+For multiple-option properties such as `i.any` or `i.either`, the property is chosen at random. For array-types, an array with a random number of rows is created.
+
+####freeze  
+This creates an object using `create` and then freezes it against the class. This allows you to create a mock object while also ensuring it will be the same instance used by your class.  
+```javascript
+var s = MyClass.freeze('iService');
+
+new MyClass();
+
+// the MyClass instance will use the same instance of iService that is stored in variable s
 ```
 
 ####unset
@@ -135,7 +157,7 @@ The context (this) will be the instance.
 MyClass.beforeInvoke(function(myServiceInstance){
   myServiceInstance.something = function(){};
   this.someProperty = 'mocked out';
-  
+
   return {
     $log : function(){}
   };

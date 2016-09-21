@@ -1,4 +1,4 @@
-branches : 
+branches :
   only :
     - master
 language : node_js
@@ -7,5 +7,13 @@ node_js :
 install :
   - cd jpexmocks
   - npm install
+  - npm install jasmine-node -g
+  - npm install codeclimate-test-reporter -g
 script :
   - jasmine-node ../spec
+
+  - istanbul cover --include-all-sources jasmine-ndoe ../spec
+  - cd ../
+  - node lcov-fix
+after_script :
+  - codeclimate-test-reporter < lcov.info
