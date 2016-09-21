@@ -12,7 +12,7 @@ install :
 script :
   - jasmine-node ../spec
 
-  - istanbul cover --include-all-sources jasmine-ndoe ../spec
+  - istanbul cover --include-all-sources jasmine-node ../spec
   - cd ../
   - node lcov-fix
 after_script :

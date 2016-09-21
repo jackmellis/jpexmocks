@@ -1,4 +1,4 @@
-var Jpex = require('./node_modules/jpex');
+var Jpex = require('./jpexmocks/node_modules/jpex');
 var App = Jpex.extend(function($fs, path){
   var base = path.resolve('.') + path.sep;
   $fs.readFile('./jpexmocks/coverage/lcov.info', 'utf8')
