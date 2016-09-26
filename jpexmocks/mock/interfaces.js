@@ -82,7 +82,7 @@ module.exports = function(Base){
                 return [];
               }
               var arrayLength = Math.floor(Math.random() * 6);
-              return (new Array(arrayLength)).fill(pattern[0]).map(createInterfaceObj);
+              return (new Array(arrayLength)).fill(pattern[0]).map(v => createInterfaceObj(v));
           }
           break;
 

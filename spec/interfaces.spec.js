@@ -160,13 +160,13 @@ describe('Jpex Mocks - Interfaces', function(){
 
     it('should create interface members for nested interfaces', function () {
       Base.Register.Interface('iParent', i => i.functionWith({a : i.string, c : i.string}));
-      Base.Register.Interface('iChild', i => i.functionWith({b : i.number, c : i.number}), 'iParent');
+      Base.Register.Interface('iChild', i => i.functionWith({b : i.number, c : i.number, d : i.arrayOf(i.string)}), 'iParent');
 
       var result = Base.mock.create('iChild');
-
       expect(typeof result.a).toBe('string');
       expect(typeof result.b).toBe('number');
       expect(typeof result.c).toBe('number');
+      expect(typeof result.d[0]).toBe('string');
     });
   });
 
