@@ -8,10 +8,45 @@ module.exports = function(Base){
       return Base.mock.get(name);
     }
 
-    return createInterfaceObj(interface.pattern);
+    var result;
 
-    function createInterfaceObj(pattern){
-      switch(Base.Typeof(pattern)){
+    listInterfaces(name)
+      .map(i => Base._getInterface(i).pattern)
+      .forEach(i => result = createInterfaceObj(i, result));
+
+    return result;
+
+    function listInterfaces(name){
+      var list = [].concat(name);
+
+      list.forEach(function(n){
+        var interface = Base._getInterface(n);
+        if (interface && interface.interface && interface.interface.length){
+          var arr = interface.interface.map(i => listInterfaces(i));
+          if (arr && arr.length){
+            list = list.concat.apply(list, arr);
+          }
+        }
+      });
+
+      return list;
+    }
+
+    function createInterfaceObj(pattern, target){
+      var type = Base.Typeof(pattern);
+
+      switch(type){
+        case 'function':
+        case 'object':
+        case 'array':
+          break;
+        default:
+          if (target !== undefined){
+            return target;
+          }
+      }
+
+      switch(type){
         case 'string':
           return 'string ' + (oCount++);
         case 'number':
@@ -21,13 +56,15 @@ module.exports = function(Base){
         case 'date':
           return new Date();
         case 'function':
-          var fn = (function(){});
-          Object.keys(pattern).forEach(k => fn[k] = createInterfaceObj(pattern[k]));
+          var fn = (typeof target === 'function') ? target : (function(){});
+          Object.keys(pattern).forEach(k => fn[k] = createInterfaceObj(pattern[k], fn[k]));
           return fn;
+
         case 'object':
-          var obj = {};
-          Object.keys(pattern).forEach(k => obj[k] = createInterfaceObj(pattern[k]));
+          var obj = (typeof target === 'object') ? target : {};
+          Object.keys(pattern).forEach(k => obj[k] = createInterfaceObj(pattern[k], obj[k]));
           return obj;
+
         case 'array':
           switch(pattern.iType){
             case 'any':
@@ -35,9 +72,12 @@ module.exports = function(Base){
               /* falls through */
             case 'either':
               var index = Math.floor(Math.random() * pattern.length);
-              return createInterfaceObj(pattern[index]);
+              return createInterfaceObj(pattern[index], target);
 
             default:
+              if (Array.isArray(target)){
+                return target;
+              }
               if (!pattern.length){
                 return [];
               }

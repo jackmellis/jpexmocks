@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+##1.3.1  
+###Bugs  
+- $log now correctly implements the $ilog interface  
+- `Class.mock.create` / `Class.mock.freeze` creates properties from child/nested interfaces  
 ##1.3.0
 ###Features
 - Create and Freeze methods added

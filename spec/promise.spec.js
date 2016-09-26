@@ -236,12 +236,10 @@ describe('Base Class - Mock - $promise', function(){
     it('should flush promises added to a rejected promise', function(){
       var p =$promise((resolve, reject) => reject(1));
       $promise.flush();
-console.log(p);
       var result;
       p
-        .then(d => result = console.log(d) || d * 10)
-        .catch(d => result = console.log(d) || d + 1);
-        console.log(p);
+        .then(d => result = d * 10)
+        .catch(d => result = d + 1);
       $promise.flush();
 
       expect(result).toBe(2);
