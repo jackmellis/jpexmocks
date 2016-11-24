@@ -238,8 +238,8 @@ describe('Base Class - Mock - $promise', function(){
       $promise.flush();
       var result;
       p
-        .then(d => result = console.log(d) || d * 10)
-        .catch(d => result = console.log(d) || d + 1);
+        .then(d => result = d * 10)
+        .catch(d => result = d + 1);
       $promise.flush();
 
       expect(result).toBe(2);

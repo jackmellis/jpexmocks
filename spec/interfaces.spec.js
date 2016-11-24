@@ -113,7 +113,7 @@ describe('Jpex Mocks - Interfaces', function(){
 
       var result = Base.mock.create('iService')
       .concat(Base.mock.create('iService'));
-      
+
       expect(typeof result).toBe('object');
       expect(Base.Typeof(result)).toBe('array');
       expect(result[0]).toBeDefined();
@@ -156,6 +156,17 @@ describe('Jpex Mocks - Interfaces', function(){
       expect(arr.length).not.toBe(distinct.length);
 
       arr.forEach(x => expect(['string', 'number'].indexOf(x)).toBeGreaterThan(-1));
+    });
+
+    it('should create interface members for nested interfaces', function () {
+      Base.Register.Interface('iParent', i => i.functionWith({a : i.string, c : i.string}));
+      Base.Register.Interface('iChild', i => i.functionWith({b : i.number, c : i.number, d : i.arrayOf(i.string)}), 'iParent');
+
+      var result = Base.mock.create('iChild');
+      expect(typeof result.a).toBe('string');
+      expect(typeof result.b).toBe('number');
+      expect(typeof result.c).toBe('number');
+      expect(typeof result.d[0]).toBe('string');
     });
   });
 
