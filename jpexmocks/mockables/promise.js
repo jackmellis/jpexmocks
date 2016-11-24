@@ -89,7 +89,9 @@ module.exports = function(){
           try{
             p.flush();
           }
-          catch(e){}
+          catch(e){
+            // Uncaught rejection
+          }
         }
       });
 

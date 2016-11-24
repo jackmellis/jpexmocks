@@ -3,15 +3,17 @@ var oCount = 101;
 module.exports = function(Base){
   // Create a dependency (specifically an interface)
   Base.mock.create = function(name){
-    var interface = Base._getInterface(name);
-    if (!interface){
+    var ifc = Base._interfaces[name];
+    if (!ifc){
       return Base.mock.get(name);
     }
 
-    return createInterfaceObj(interface.pattern);
+    var $typeof = Base.mock.get('$typeof');
+
+    return createInterfaceObj(ifc.pattern);
 
     function createInterfaceObj(pattern){
-      switch(Base.Typeof(pattern)){
+      switch($typeof(pattern)){
         case 'string':
           return 'string ' + (oCount++);
         case 'number':
@@ -60,7 +62,7 @@ module.exports = function(Base){
   // Create a dependency and then freeze it against the class
   Base.mock.freeze = function(name, as){
     var obj = this.create(name);
-    var isInterface = !!Base._getInterface(name);
+    var isInterface = !!Base._interfaces[name];
 
     if (isInterface){
       as = as || 'frozen' + name + (oCount++);

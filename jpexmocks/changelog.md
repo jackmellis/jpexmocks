@@ -1,5 +1,7 @@
 Change Log
 ==========
+##1.4.0  
+- Compatibility compliance with Jpex 1.4.0.
 
 ##1.3.0
 ###Features

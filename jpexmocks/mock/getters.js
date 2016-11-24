@@ -13,7 +13,7 @@ module.exports = function(Base){
     }
     return result;
   };
-  
+
   // Set a single dependency
   Base.mock.set = function(name, value){
     var type = (typeof value === 'function') ? 'Factory' : 'Constant';
@@ -24,7 +24,7 @@ module.exports = function(Base){
 
     return Base.Register[type].apply(Base, arguments).lifecycle.application();
   };
-  
+
   // Inject a series of dependencies
   Base.mock.inject = function(fn){
     var self = this;
@@ -39,7 +39,7 @@ module.exports = function(Base){
       });
     }
   };
-  
+
   // Revert a single dependency
   Base.mock.unset = function(name){
     if (!Base._mock.factories[name] || Base._mock.factories[name] === true){
@@ -49,10 +49,10 @@ module.exports = function(Base){
     }
     delete Base._mock.factories[name];
   };
-  
+
   // Revert the default mocked dependencies
   Base.mock.unsetDefaults = function(){
-    ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise', '$fs']
+    ['$log', '$timeout', '$interval', '$immediate', '$tick', '$promise', '$fs', '$copy', '$typeof', '$resolve']
     .forEach(Base.mock.unset);
   };
 };
