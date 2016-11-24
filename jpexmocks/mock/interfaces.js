@@ -22,9 +22,9 @@ module.exports = function(Base){
       var list = [].concat(name);
 
       list.forEach(function(n){
-        var interface = Base._interfaces[n];
-        if (interface && interface.interface && interface.interface.length){
-          var arr = interface.interface.map(i => listInterfaces(i));
+        var ifc = Base._interfaces[n];
+        if (ifc && ifc.interface && ifc.interface.length){
+          var arr = ifc.interface.map(i => listInterfaces(i));
           if (arr && arr.length){
             list = list.concat.apply(list, arr);
           }
