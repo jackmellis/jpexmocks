@@ -1,0 +1,42 @@
+{
+  "name": "jpex-mocks",
+  "version": "2.0.0-alpha.1",
+  "description": "Jpex Mocks =========== Mocking Library for Jpex ------------------------ [![Build Status](https://travis-ci.org/jackmellis/jpexmocks.svg?branch=master)](https://travis-ci.org/jackmellis/jpexmocks) [![npm version](https://badge.fury.io/js/jpexmocks.svg)](https://badge.fury.io/js/jpexmocks) [![Code Climate](https://codeclimate.com/github/jackmellis/jpexmocks/badges/gpa.svg)](https://codeclimate.com/github/jackmellis/jpexmocks) [![Test Coverage](https://codeclimate.com/github/jackmellis/jpexmocks/badges/coverage.svg)](https://codeclimate.com/github/jackmellis/jpexmocks/coverage)",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jasmine",
+    "coverage": "nyc jasmine",
+    "build": "node node_modules/jpex-build-tools/build --entry ./src --output ./dist/jpex-mocks.js --name jpexMocks && node node_modules/jpex-build-tools/build --entry ./src/defaults --output ./dist/jpex-mock-factories.js --name jpexMockFactories",
+    "lcov-fix": "node node_modules/jpex-build-tools/lcov-fix",
+    "travis-prepublish": "node node_modules/jpex-build-tools/travis-prepublish",
+    "lint": "eslint ./src --fix",
+    "publish-please": "publish-please",
+    "prepublish": "publish-please guard",
+    "build-jpex": "cd ../jpex && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jackmellis/jpexmocks.git"
+  },
+  "author": "Jack Ellis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jackmellis/jpexmocks/issues"
+  },
+  "homepage": "https://github.com/jackmellis/jpexmocks#readme",
+  "devDependencies": {
+    "eslint": "^3.15.0",
+    "jasmine": "^2.5.3",
+    "jpex": "^2.0.0-alpha.1",
+    "jpex-build-tools": "git+https://github.com/jackmellis/jpex-build-tools.git",
+    "jpex-defaults": "^2.0.0-alpha.0",
+    "nyc": "^10.1.2",
+    "publish-please": "^2.2.0"
+  },
+  "peerDependencies": {
+    "jpex": "^2.0.0"
+  },
+  "dependencies": {
+    "mock-fs": "^3.12.1"
+  }
+}

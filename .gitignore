@@ -1,3 +1,6 @@
+dist
+lcov.info
+
 # Logs
 logs
 *.log

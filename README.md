@@ -7,208 +7,242 @@ Mocking Library for Jpex
 [![Code Climate](https://codeclimate.com/github/jackmellis/jpexmocks/badges/gpa.svg)](https://codeclimate.com/github/jackmellis/jpexmocks)
 [![Test Coverage](https://codeclimate.com/github/jackmellis/jpexmocks/badges/coverage.svg)](https://codeclimate.com/github/jackmellis/jpexmocks/coverage)
 
-This is intended to be used when unit testing using the Jpex class framework. It adds several extra features to your classes so that you can easily mock out and test your classes.
+This is intended to be used when unit testing using the Jpex class framework. It adds several extra features to your classes so that you can easily mock out and test your code.
 
-Usage
------
+## Installation  
+`npm install jpex-mocks`
+
+## Usage  
+Node:  
 ```javascript
-describe('Test Suite', function(){
-  var jpex, mock, MyClass, systemUnderTest;
+const Jpex = require('jpex');
+const mocks = require('jpex-mocks');
+Jpex.use(mocks);
 
-  beforeEach(function(){
-    jpex = require('jpex');
-    mock = require('jpexmocks');
+// You can now start mocking stuff
+Jpex.$set('myFactory', {});
+```
 
-    MyClass = require('./myclassdeclration'),
+Webpack/Browserify:  
+```javascript
+var Jpex = require('jpex');
+var mocks = require('jpex-mocks');
+Jpex.use(mocks);
+```
 
-    mock(MyClass); // From this point, anything that extends MyClass will be mocked out
+HTML/Javascript
+```html
+<script src="node_modules/jpex/dist/jpex.js"></script>
+<script src="node_modules/jpex-mocks/dist/jpex-mocks.js"></script>
+<script>
+Jpex.use(jpexMocks);
+</script>
+```
 
-    systemUnderTest = require('./service/thingy');
-  });
-
-  afterEach(function(){
-    MyClass.mock.reset(true); // Reset everthing back to a pre-mocked state
-  });
-
-  it('should test using jpexmocks', function(){
-    var service;
-
-    // Inject dependencies into the class
-    MyClass.mock.inject(function(myService){
-      service = myService;
-      spyOn(myService, 'doSomething');
-      return {
-        $log : function(){}
-      };
-    });
-
-    // Run functions before and after instantiating the class
-    MyClass.mock.afterInvoke(function(){
-      expect(this.property).toBe(true);
-    });
-
-    systemUnderTest.go();
-
-    expect(service.doSomething).toHaveBeenCalled(); // etc.
-  });
+You can then use *jpex-mocks* to enhance your unit tests:
+```javascript
+beforeAll(() => {
+  Jpex = require('jpex');
+  var mocks = require('jpex-mocks');
+  Jpex.use(mocks);
+});
+beforeEach(() => {
+  Jpex.$set('mockMeOut', {});
+});
+// Tests
+afterEach(() => {
+  Jpex.$reset();
 });
 ```
 
-You can pass in a specific class to mock, otherwise it will mock the base class, meaning that every subsequent class will be mocked.
-Once a class had been mocked, any new classes that extend it will be tracked and automatically mocked as well.
-
-###Mock Properties
-A mock object will be attached to each mocked class with a number of properties:
-
-####children
-An array of classes that have inherited the class. This is direct children only.
+The plugin does not necessarily have to be used on the Jpex class, you can mock out only a specific class:
 ```javascript
-var SubClass = MyClass.extend();
-
-MyClass.mock.children[0] === SubClass;
+var MyClass = require('../classes/myclass');
+MyClass.use(mocks);
 ```
+Although any class that inherits *MyClass* will also inherit the mocking properties.
 
-####descendants
-An array of classes that have inherited the class or any descendant class.
+## API  
+### Properties  
+#### $children  
+`Class.$children`  
+This will return a list of all classes that directly inherit the current class.
+
+#### $descendants  
+`Class.$descendants`  
+Similar to *$children* except that if a child class has its own children, these will be included.
+
+#### $instances  
+`Class.$instances`  
+Returns a list of all instances of the current class.
+
+### Methods  
+#### $get  
+`Class.$get(name, namedParameters)`  
+Resolves a specific dependency. **Name** can either be a string, or an array of strings. This is essentially the same as calling *Class.$resolve*.
+
+#### $set  
+`Class.$set(name, [dependencies], value)`  
+Sets a mocked value for a factory. When the factory is resolved, this value will be used instead of any other value. Note that even if the factory is registered *after* using **$set**, the **$set** version will still be used.  
+If **value** is a *function* it will be treated as a factory, and the return value of the function will be used. For any other type, it will treat it as a constant.  
+The mocked factory will automatically be set as a singleton so will only be resolved once.  
 ```javascript
-var SubClass = MyClass.extend();
-var SubSubClass = SubClass.extend();
-
-MyClass.mock.children[0] === SubClass;
-MyClass.mock.children[1] === SubSubClass;
-```
-
-####instances
-Any time the class is instantiated, the new instance will be added to this array.
-```javascript
-var instance = new MyClass();
-
-MyClass.mock.instances[0] === instance;
-```
-
-####get
-This will pull out any dependencies being used by the class so that they can be manipulated or held in memory.  
-Keep in mind that if you get a factory or service that is not a singleton it will be a different instance to that used when the class is instantiated. For this you will want the inject or beforeInvoke functions.
-```javascript
-var myService = MyClass.mock.get('myService');
-```
-
-####set
-Injects a dependency into the class. The value will be injected into the class when instantiated.  
-The dependency will be inherited by child classes.  
-If the value is a function it will be treated as a factory, otherwise it is injected as a constant.
-```javascript
-MyClass.mock.set('constant', 'bob');
-MyClass.mock.set('factory', function(){
-  return {};
+Class.$set('myFactory', function () {
+  return 'foo';
 });
+
+Class.$get('myFactory'); // 'foo'
+
+Class.register.factory('myFactory', () => 'bah');
+
+Class.$get('myFactory'); // still 'foo'. Unless $unset or $reset are called
 ```
 
-####inject
-Inject is a combination of the get and set functions.  
-The function parameters will be resolved and injected. You can then return an object containing additional dependencies to inject back into the class.
+#### $unset  
+`Class.$unset([names], [up], [down])`  
+This will remove a mocked factory for the current class. If **names** is *null*, all factories registered with **$set** will be removed from the class.  
+If **up** is true, it will remove factories from the parent classes as well (useful for unsetting a factory at an unknown point in the inheritance chain).  
+If **down** is true, it will remove factories from the class's children as well.  
 ```javascript
-MyClass.mock.inject(function(mySingletonService){
-  mySingletonService.something = function(){};
+Class.$unset('specificFactory');
+Class.$unset(['a', 'b']);
+Class.$unset('inheritedFactory', true);
+Class.$unset(null, false, true); // remove all mocked factories from child classes
+```
+
+#### $inject  
+`Class.$inject([dependencies], fn)`  
+Inject is a combination of the `$get` and `$set` functions.  
+The **function** parameters will be resolved and injected. You can then return an object containing additional dependencies to inject back into the class.
+```javascript
+Class.$inject(function(mySingletonService){
+  mySingletonService.something = function(){}; // mutate mySingletonService
 
   return {
-    $log : function(){}
+    $log : function(){} // overwrite $log
   };
 });
 ```
 
-####unset
-This will revert a mocked dependency back to its original form. Note that you must unset the dependency on the class it was declared on, you cannot unset an inherited dependency.
+#### $freeze  
+`Class.$freeze(name, [alias], [namedParameters])`  
+This will resolve a dependency and then **$set** it back on the class, ensuring that it is a singleton value. It will then return the resolved value.  
 ```javascript
-MyClass.mock.set('f1', {});
-SubClass.mock.set('f2', {});
-
-SubClass.mock.unset('f2'); // This will revert f2 back to its original factory, if there was one.
-
-SubClass.mock.unset('f1'); // This will not do anthing, subclass will still use the mocked factory from MyClass
-
-MyClass.mock.unset('f1'); // Now both MyClass and SubClass will revert to the original factory.
+var f = Class.$freeze('myFactory');
+f === Class.$resolve('myFactory'); // true
 ```
+The **alias** parameter allows you to register the resolved value under a different name.  
 
-####beforeInvoke
-This function will be invoked immediately before a class is instantiated. The function parameters will be injected as expected, however, any factories or services will be the same instances that will be passed into the constructor.  
-As with inject, you can return an object containing dependencies that will be passed into the constructor.  
-The context (this) will be the instance.
+#### $beforeInvoke  
+`Class.$beforeInvoke(callback);`  
+The **$beforeInvoke** method allows you add a callback that will be called just before the class's constructor function is called.
 ```javascript
-MyClass.beforeInvoke(function(myServiceInstance){
-  myServiceInstance.something = function(){};
-  this.someProperty = 'mocked out';
-
-  return {
-    $log : function(){}
-  };
+Class.$beforeInvoke(function () {
+  console.log('I have almost been created');
 });
 ```
+The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
 
-####invokeAfter
-Much like invokeBefore, this will be called immediately after the class is instantiated.
-
-####reset
-This will reset the class the class to its pre-mocked state. If deep is true, it will also reset all child classes.  
-Keep in mind that if you don't reset s child class that relies on a mock dependency of its parent, it will no longer find it.  
-It's extremely advisable to reset your mocked classes after every test.
-
-###Predefined Factories
-Some predefined factories are automatically mocked out:
-
-####Timers ($timeout, $interval, $immediate, $tick)
-Timeouts will not just trigger on their own and must be cleared out with the flush function.
+#### $afterInvoke  
+`Class.$afterInvoke(callback);`  
+The **$afterInvoke** method allows you add a callback that will be called just after the class's constructor function is called.
 ```javascript
-var $timeout = MyClass.mock.get('$timeout');
-var instance = new MyClass();
-$timeout.flush();
-expect(something).toHaveHappened();
+Class.$afterInvoke(function () {
+  console.log('I have been fully created');
+});
+```
+The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
+
+#### $on  
+`Class.$on(eventName, callback)`  
+**$on** exposes Jpex's event system that is normally reserved for plugins. The first argument is the name of the event to hook into. The callback receives a *context* object as its only argument. This contains information about that event.  
+```javascript
+Class.$on('extend', function ({Class, options}) {
+  // do something whenever the class is extended
+});
+```
+There are a number of events that can be hooked into:  
+- extend
+- options
+- beforeCreate
+- created
+- privateProperties
+- factories
+- getFactory
+
+#### $reset  
+This will reset any modifications to the class.
+- Firstly it will remove any factories registered using `$set`.  
+- Then it will clear the dependency cache of *all* factories using `$clearCache`.  
+- It will empty the `$children`, `$descendants` and `$instances` properties.  
+- It will remove any functions attached to `$beforeInvoke` and `$afterInvoke`.  
+- It will remove any event listeners registered via `$on`.  
+- It will then recursively reset any child classes.  
+
+### Factories  
+*jpex-mocks* comes with a number of factories that overwrite the behaviour of the *jpex-defaults*, *jpex-node*, and *jpex-web* plugins.  
+It is possible to skip this step with the following option:
+```javascript
+Jpex.use(mocks, { factories : false});
 ```
 
-####$promise
-Promises also become synchronous and will only be resolved after calling $promise.flush().  
+#### $timeout  
+`$timeout(callback, delay)`  
+Queues up a timeout. The timeout is *not* called asynchronously and must be triggered by calling `$timeout.flush()`.  
+If you pass a numeric value into the *flush* method, only timeouts that would have been called after that amount of time will be flushed. The amount if cumulative, meaning that every time you call `flush(n)` the value *n* will be added to the total elapsed time.  
+
+#### $interval  
+`$interval(callback, delay)`  
+Queues up an interval. The callback is *not* called asynchronously and must be triggered by calling `$interval.flush()`.  
+Like *$timeout*, `$interval.flush` can be called with a numeric value.
+
+#### $immediate  
+`$immediate(callback)`  
+Queues up a callback which can be triggered by calling `$immediate.flush()`.
+
+#### $tick  
+`$tick(callback)`  
+Queues up a callback which can be triggered by calling `$immediate.flush()`.
+
+#### $log  
+`$log(message)`  
+Rather than outputting messages to the console, the mocked **$log** factory has a **messages** property which is appended to.  
+
+#### $promise  
+`$promise(callback)`  
+Like the timer factories, the mock **$promise** factory is synchronous. Any promises made using **$promise** will be flushed when you call `$promise.flush()`.  
 If a promise doesn't get resolved in a flush cycle, it will be checked again on the next call and so on until it is resolved.  
-$promise has a list of all promises that can be accessed via `$promise.promises`. Each promise then has a state (pending, fulfilled, rejected) and its own flush function, meaning you can flush promises individually.  
+**$promise** has a list of all promises that can be accessed via `$promise.promises`. Each promise then has a state (pending, fulfilled, rejected) and its own flush function, meaning you can flush promises individually.  
 Keep in mind that if you attempt to flush a promise that relies on another promise, that promise will also be flushed
 ```javascript
-var $p = MyClass.mock.get('$promise');
-var instance = new MyClass();
+var $promise = Class.$get('$promise');
 
-$p.promises[0].state === 'pending' // true
-$p.flush();   // or $p.promises[0].flush();
-$p.promises[0].state === 'fulfilled' // true
+$promise((resolve, reject) => { resolve(4); });
+
+$promise.flush();
 ```
 
-####$log
-For the sake of not polluting the console during testing, all log methods are mocked out and do not log to the console. Any calls to $log will be added to the messages property.
+#### $fs  
+The **$fs** factory is mocked out and made syncronous. All IO operations are made on a configurable file structure. In the background this uses [mock-fs](https://github.com/tschaub/mock-fs) to mock out Node's *fs* module. Use the `$fs.use` function to provide your mock file system. For more information about the structure of this object, see the documentation for **mock-fs**. As with **$promise**, use `$fs.flush()` to resolve its calls.
 ```javascript
-var $log = MyClass.mock.get('$log');
-var instance = new MyClass();
-
-$log.messages.length === 1;
-```
-
-####$fs  
-The [$fs](https://github.com/jackmellis/jpex/jpex-fs) factory is mocked out and made syncronous. All IO operations are made on a dummy file structure you provide. In the background this uses [mock-fs](https://github.com/tschaub/mock-fs) to mock out Node's *fs* module. Use the $fs.use function to provide your mock file system. For more information about the structure of this object, see the documentation for mock-fs. As with $promise, use $fs's flush method to resolve its calls.
-```javascript
-var $fs = MyClass.mock.get('$fs');
+var $fs = Class.$get('$fs');
 $fs.use({
-  'lib/img/img1.png',
-  'lib/img/img2.png'
+  'lib/img/img1.txt' : 'file contents',
+  'lib/img/img2.txt' : 'more contents'
 });
 
 $fs.readdir('./lib/img')
-  .then(function(){})
-  .catch(function(){});
+  .then(function(){ ... })
+  .catch(function(){ ... });
+
 $fs.flush();
 
 // As $fs is promise-based you can also flush your methods using $promise.flush();
-MyClass.mock.get('$promise').flush();
+$promise.flush();
 ```
 
-If you want to restore the original version of these factories, you can use `unset` to undo them individually, or `unsetDefaults` to restore them all.
-```javascript
-mock(MyClass);
+#### $window  
+**jpex-mocks** provides a mock *$window* object. This is only a simple mock object with only one property: `$window.document`.  
 
-MyClass.mock.unsetDefaults();
-```
+#### $document  
+The **$document** factory returns the document object from **$window**. This is just a plain object.
