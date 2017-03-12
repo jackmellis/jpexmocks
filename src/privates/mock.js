@@ -4,8 +4,10 @@ module.exports = function (Parent) {
   $$mock.instances = [];
   $$mock.factories = Object.create(Parent && Parent.$$mock && Parent.$$mock.factories || null);
   $$mock.listeners = {};
-  $$mock.beforeInvoke = [];
-  $$mock.afterInvoke = [];
+  $$mock.beforeInvoke = null;
+  $$mock.afterInvoke = null;
+  $$mock.stubFn = null;
+  $$mock.autoStub = null;
 
   return $$mock;
 };

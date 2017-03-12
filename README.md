@@ -76,6 +76,53 @@ Similar to *$children* except that if a child class has its own children, these 
 `Class.$instances`  
 Returns a list of all instances of the current class.
 
+#### $stubFn  
+`Class.$stubFn = () => { return () => {}; };`  
+The `$stubFn` determines what should be used when `$stub()` is called. It should be a function that returns another function. The default stub function will check for the existence of `jasmine` and `sinon` and return a spy if possible, otherwise it will return an empty function.  
+`$stubFn` can accept the original function as a parameter
+```javascript
+Class.$stubFn = function (original) {
+  return function (...args) {
+    // do some stuff
+    return original.apply(this, args); // we can even call through to the original function if we want
+  };
+};
+
+// or we can use a spy library...
+Class.$stubFn = function () {
+  return jasmine.createSpy();
+};
+```
+
+#### $autoStub  
+`Class.$autoStub = true|false|{ include, exclude }|null`  
+While you can manually stub a service with `Class.$stub()`, you may just want to stub any factory that gets injected. Like `$stub`, `$autoStub` will use the return value of `$stubFn` to stub functions.  
+Setting this to `true` will automatically stub all factories, `false` will stub no factories, and setting it to `null`/`undefined` will fall back to the parent Class's setting.  
+You can also set `$autoStub` to an object containing an array of factories to include/exclude. This is useful if you only want to stub certain factories, or you have factories that you never want to stub.  
+```javascript
+Class.$autoStub = { exclude : ['$log', '$promise', '$timeout'] };
+```
+
+#### $beforeInvoke  
+`Class.$beforeInvoke = callback`  
+The **$beforeInvoke** property allows you add a callback that will be called just before the class's constructor function is called.
+```javascript
+Class.$beforeInvoke = function () {
+  console.log('I have almost been created');
+};
+```
+The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
+
+#### $afterInvoke  
+`Class.$afterInvoke = callback`  
+The **$afterInvoke** property allows you add a callback that will be called just after the class's constructor function is called.
+```javascript
+Class.$afterInvoke = function () {
+  console.log('I have been fully created');
+};
+```
+The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
+
 ### Methods  
 #### $get  
 `Class.$get(name, namedParameters)`  
@@ -133,25 +180,13 @@ f === Class.$resolve('myFactory'); // true
 ```
 The **alias** parameter allows you to register the resolved value under a different name.  
 
-#### $beforeInvoke  
-`Class.$beforeInvoke(callback);`  
-The **$beforeInvoke** method allows you add a callback that will be called just before the class's constructor function is called.
+#### $stub  
+`Class.$stub(name)`  
+The `$stub` method will resolve a factory and then replace its methods with a stubbed function. The stubbed function is the return value of `Class.$stubFn`. This will also `$freeze` the factory.
 ```javascript
-Class.$beforeInvoke(function () {
-  console.log('I have almost been created');
-});
+var service = Class.$stub('myService');
+service.doSomething(); // calls a stubbed function instead of the real one
 ```
-The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
-
-#### $afterInvoke  
-`Class.$afterInvoke(callback);`  
-The **$afterInvoke** method allows you add a callback that will be called just after the class's constructor function is called.
-```javascript
-Class.$afterInvoke(function () {
-  console.log('I have been fully created');
-});
-```
-The **this** object will be set to the newly-created instance. The callback will receive the same arguments as the constructor function, i.e. the class's dependencies.
 
 #### $on  
 `Class.$on(eventName, callback)`  

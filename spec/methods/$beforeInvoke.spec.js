@@ -14,7 +14,7 @@ describe("$beforeInvoke", function () {
     var spy1 = jasmine.createSpy().and.callFake(() => order.push(1));
     var spy2 = jasmine.createSpy().and.callFake(() => order.push(2));
     var Class = Jpex.extend(spy1);
-    Class.$beforeInvoke(spy2);
+    Class.$beforeInvoke = (spy2);
 
     Class();
 
@@ -27,14 +27,14 @@ describe("$beforeInvoke", function () {
     var spy = jasmine.createSpy();
     var path = require('path');
     var Class = Jpex.extend({dependencies : 'path'});
-    Class.$beforeInvoke(spy);
+    Class.$beforeInvoke = (spy);
     Class();
 
     expect(spy).toHaveBeenCalledWith(path);
   });
   it("should have the instance context", function () {
     var calledWith = {};
-    Jpex.$beforeInvoke(function () {
+    Jpex.$beforeInvoke = (function () {
       calledWith = this;
     });
     Jpex();
@@ -43,7 +43,7 @@ describe("$beforeInvoke", function () {
   });
   it("should not fire on child classes", function () {
     var called = false;
-    Jpex.$beforeInvoke(() => called = true);
+    Jpex.$beforeInvoke = (() => called = true);
     var Class = Jpex.extend();
 
     Class();

@@ -9,8 +9,8 @@ module.exports = function () {
   // Remove children
   var children = this.$$mock.children.splice(0);
   // Clear before/after invokes
-  this.$$mock.beforeInvoke.splice(0);
-  this.$$mock.afterInvoke.splice(0);
+  this.$$mock.beforeInvoke = null;
+  this.$$mock.afterInvoke = null;
   // Remove hooks added via $on
   Object.keys(this.$$mock.listeners).forEach(function (key) {
     var listeners = self.$$mock.listeners[key];

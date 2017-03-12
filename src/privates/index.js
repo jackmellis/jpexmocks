@@ -6,6 +6,8 @@ var $unset = require('./$unset');
 var $freeze = require('./$freeze');
 var $on = require('./$on');
 var $reset = require('./$reset');
+var $stubFn = require('./$stubFn');
+var $stub = require('./$stub');
 
 var $children = {
   get : function(){
@@ -19,19 +21,38 @@ var $instances = {
   }
 };
 
-function $beforeInvoke(fn) {
-  if (typeof fn !== 'function'){
-    throw new Error('$beforeInvoke must be supplied with a [Function]');
+var $beforeInvoke = {
+  get : function () {
+    return this.$$mock.beforeInvoke;
+  },
+  set : function (fn) {
+    if (fn && typeof fn !== 'function'){
+      throw new Error('$beforeInvoke must be supplied with a [Function]');
+    }
+    this.$$mock.beforeInvoke = fn;
   }
-  this.$$mock.beforeInvoke.push(fn);
-}
+};
 
-function $afterInvoke(fn) {
-  if (typeof fn !== 'function'){
-    throw new Error('$afterInvoke must be supplied with a [Function]');
+var $afterInvoke = {
+  get : function () {
+    return this.$$mock.afterInvoke;
+  },
+  set : function (fn) {
+    if (fn && typeof fn !== 'function'){
+      throw new Error('$afterInvoke must be supplied with a [Function]');
+    }
+    this.$$mock.afterInvoke = fn;
   }
-  this.$$mock.afterInvoke.push(fn);
-}
+};
+
+var $autoStub = {
+  get : function () {
+    return (this.$$mock.autoStub != null) ? this.$$mock.autoStub : this.$$parent.$autoStub;
+  },
+  set : function (v) {
+    this.$$mock.autoStub = v;
+  }
+};
 
 function asValue(obj) {
   return { value : obj };
@@ -47,14 +68,17 @@ module.exports = function (Class, Parent) {
     $children : $children,
     $descendants : $descendants,
     $instances : $instances,
-    $beforeInvoke : asValue($beforeInvoke),
-    $afterInvoke : asValue($afterInvoke),
+    $beforeInvoke : $beforeInvoke,
+    $afterInvoke : $afterInvoke,
     $get : asValue($get),
     $set : asValue($set),
     $inject : asValue($inject),
     $unset : asValue($unset),
     $freeze : asValue($freeze),
     $on : asValue($on),
-    $reset : asValue($reset)
+    $reset : asValue($reset),
+    $stubFn : $stubFn,
+    $stub : asValue($stub),
+    $autoStub : $autoStub
   };
 };

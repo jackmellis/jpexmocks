@@ -1,5 +1,6 @@
 var createPrivateProperties = require('./privates');
 var defaultsPlugin = require('./defaults');
+var stubber = require('./stub');
 
 exports.name = 'jpex-mocks';
 exports.install = function (options) {
@@ -35,10 +36,8 @@ exports.install = function (options) {
     var instance = context.instance;
     var args = context.args;
 
-    if (Class.$$mock.beforeInvoke.length){
-      Class.$$mock.beforeInvoke.forEach(function (fn) {
-        fn.apply(instance, args);
-      });
+    if (Class.$$mock.beforeInvoke){
+      Class.$$mock.beforeInvoke.apply(instance, args);
     }
   });
 
@@ -49,10 +48,8 @@ exports.install = function (options) {
 
     Class.$$mock.instances.push(instance);
 
-    if (Class.$$mock.afterInvoke.length){
-      Class.$$mock.afterInvoke.forEach(function (fn) {
-        fn.apply(instance, args);
-      });
+    if (Class.$$mock.afterInvoke && typeof Class.$$mock.afterInvoke === 'function'){
+      Class.$$mock.afterInvoke.apply(instance, args);
     }
   });
 
@@ -63,6 +60,16 @@ exports.install = function (options) {
 
     if (Class.$$mock.factories[name]){
       set(Class.$$mock.factories[name]);
+    }else if (!Class.$$factories[name]){
+      // If the factory hasn't been registered, it might be a node module
+      // Shortcut checking for its existence so it gets registered as a constant
+      try{
+        Class.$$getFromNodeModules(name);
+      }catch(e){
+        // Doesn't exist in node modules either
+      }
     }
+
+    stubber(Class, name);
   });
 };

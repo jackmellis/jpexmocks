@@ -15,6 +15,7 @@ Change Log
 - `Jpex.mock.unsetDefaults` removed  
 - Added `Jpex.$on` to attach event listeners  
 - Added `$document` and `$window` factories.  
+- Added `$stub` method as well as `$autoStub` and `$stubFn` properties, allowing you to automatically stub all functions of a factory.
 
 ## 1.4.0  
 - Compatibility compliance with Jpex 1.4.0.

@@ -16,8 +16,8 @@ describe("$reset", function () {
     // before/after invoke
     beforeCalled = 0;
     afterCalled = 0;
-    Jpex.$beforeInvoke(() => beforeCalled++);
-    Jpex.$afterInvoke(() => afterCalled++);
+    Jpex.$beforeInvoke = () => beforeCalled++;
+    Jpex.$afterInvoke = () => afterCalled++;
     // events
     eventCalled = 0;
     Jpex.$on('beforeCreate', () => eventCalled++);
