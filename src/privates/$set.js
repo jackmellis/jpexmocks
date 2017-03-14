@@ -1,6 +1,8 @@
+var hasOwn = require('jpex/src/hasOwn');
+
 module.exports = function (name, dependencies, value) {
   // Back up the original
-  var hasOwn = Object.hasOwnProperty.call(this.$$factories, name);
+  var hasOwnFactory = hasOwn(this.$$factories, name);
   var backup = this.$$factories[name];
   var f;
 
@@ -19,7 +21,7 @@ module.exports = function (name, dependencies, value) {
   }
 
   // Remove the newly-registered factory
-  if (hasOwn){
+  if (hasOwnFactory){
     this.$$factories[name] = backup;
   }else{
     delete this.$$factories[name];

@@ -1,8 +1,10 @@
+var hasOwn = require('jpex/src/hasOwn');
+
 module.exports = function (names, up, down) {
   names = [].concat(names || []);
 
   for (var key in this.$$mock.factories){
-    if (Object.hasOwnProperty.call(this.$$mock.factories, key)){
+    if (hasOwn(this.$$mock.factories, key)){
       if (!names.length || names.indexOf(key) > -1){
         delete this.$$mock.factories[key];
       }
