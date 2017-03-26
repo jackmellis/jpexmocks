@@ -1,6 +1,6 @@
 {
   "name": "jpex-mocks",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0",
   "description": "Mocking Library for Jpex",
   "main": "src/index.js",
   "scripts": {
@@ -23,13 +23,13 @@
   "bugs": {
     "url": "https://github.com/jackmellis/jpexmocks/issues"
   },
-  "homepage": "https://github.com/jackmellis/jpexmocks#readme",
+  "homepage": "https://jpex-js.github.io/plugins/jpex-mocks",
   "devDependencies": {
     "eslint": "^3.15.0",
     "jasmine": "^2.5.3",
-    "jpex": "^2.0.0-alpha.1",
+    "jpex": "^2.0.0",
     "jpex-build-tools": "git+https://github.com/jackmellis/jpex-build-tools.git",
-    "jpex-defaults": "^2.0.0-alpha.0",
+    "jpex-defaults": "^2.0.0",
     "nyc": "^10.1.2",
     "publish-please": "^2.2.0"
   },
