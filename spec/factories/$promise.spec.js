@@ -268,6 +268,33 @@ describe('$promise', function(){
 
       expect(result).toBe(2);
     });
+    it('should accept a real promise within a fake promise', function (done) {
+      var spy = jasmine.createSpy();
+      var p = $promise(function (resolve) {
+        return $promise.resolve().then(function () {
+          return Promise.resolve().then(function () {
+            resolve();
+          });
+        });
+      })
+      .then(function () {
+        spy();
+      })
+      .catch(err => console.log(err));
+
+      $promise.flush();
+
+      expect(spy).not.toHaveBeenCalled();
+
+      setTimeout(function () {
+        expect(spy).not.toHaveBeenCalled();
+        $promise.flush();
+        setTimeout(function () {
+          expect(spy).toHaveBeenCalled();
+          done();
+        }, 5);
+      }, 5);
+    });
   });
 
   describe('Resolve', function(){
