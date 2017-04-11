@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+## 2.0.1
+- Fixed a bug where `$promise` was attempting to `flush` *real* promises that don't have a `flush` method.  
+- Fixed a bug where `$promise` was outputting a warning when a promise was rejected, even if it was then caught by another promise.
+
 ## 2.0.0  
 - Complete redesign of the background code  
 - `Jpex.mock.children` becomes `Jpex.$children`  
