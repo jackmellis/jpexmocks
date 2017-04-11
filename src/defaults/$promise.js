@@ -92,7 +92,9 @@ module.exports = function(){
           }
           catch(e){
             // Uncaught rejection
-            console.log(['Uncaught rejection:', e && e.message || e].join(' ')); //eslint-disable-line
+            if (!p.captured){
+              console.log(['Uncaught rejection:', e && e.message].join(' ')); //eslint-disable-line
+            }
           }
         }
       });
@@ -155,6 +157,7 @@ PromiseClass.prototype.flush = function(){
       if (!q.isFirst && val && typeof val.then === 'function' && typeof val.catch === 'function'){
         // We've been passed a promise so we need to wait for it to resolve...
         var newPromise = val;
+        newPromise.captured = true;
         q.then = function(){
           return newPromise.flush();
         };

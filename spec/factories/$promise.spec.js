@@ -47,6 +47,7 @@ describe('$promise', function(){
         });
         $promise.flush();
         expect(result.state).toBe('rejected');
+        expect(console.log).toHaveBeenCalled();
       };
       new Master();
     });
@@ -66,6 +67,31 @@ describe('$promise', function(){
       $promise.flush();
 
       expect(result).toBe('error');
+    });
+    it('should not log a rejected promise caught by another promise...', function () {
+      spyOn(console, 'log');
+      constructor = function ($promise) {
+        var rej;
+        var result2 = $promise(function (resolve, reject) {
+          rej = reject;
+        });
+        var result = $promise.resolve()
+        .then(function () {
+           return result2;
+        })
+        .catch(function () {
+
+        });
+
+        $promise.flush();
+        rej();
+        $promise.flush();
+
+        expect(result2.state).toBe('rejected');
+        expect(result.state).toBe('fulfilled');
+        expect(console.log).not.toHaveBeenCalled();
+      };
+      new Master();
     });
     it('should not resolve the promise until flushed', function(){
       var result;
