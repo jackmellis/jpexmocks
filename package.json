@@ -1,6 +1,6 @@
 {
   "name": "jpex-mocks",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Mocking Library for Jpex",
   "main": "src/index.js",
   "scripts": {
