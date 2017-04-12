@@ -3,7 +3,7 @@ Jpex Mocks
 Mocking Library for Jpex
 ------------------------
 [![Build Status](https://travis-ci.org/jackmellis/jpexmocks.svg?branch=master)](https://travis-ci.org/jackmellis/jpexmocks)
-[![npm version](https://badge.fury.io/js/jpexmocks.svg)](https://badge.fury.io/js/jpexmocks)
+[![npm version](https://badge.fury.io/js/jpex-mocks.svg)](https://badge.fury.io/js/jpex-mocks)
 [![Code Climate](https://codeclimate.com/github/jackmellis/jpexmocks/badges/gpa.svg)](https://codeclimate.com/github/jackmellis/jpexmocks)
 [![Test Coverage](https://codeclimate.com/github/jackmellis/jpexmocks/badges/coverage.svg)](https://codeclimate.com/github/jackmellis/jpexmocks/coverage)
 
