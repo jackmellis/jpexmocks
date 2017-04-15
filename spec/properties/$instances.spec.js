@@ -1,36 +1,52 @@
-describe("$instances", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
-  it("should have an $instances property", function () {
-    expect(Jpex.$instances).toBeDefined();
-    expect(Jpex.$instances.length).toBe(0);
-  });
-  it("should add a new instance to the property", function () {
-    Jpex();
-    expect(Jpex.$instances.length).toBe(1);
-    Jpex();
-    expect(Jpex.$instances.length).toBe(2);
-  });
-  it("should not add indirect instances", function () {
-    var Class = Jpex.extend();
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-    Jpex();
-    expect(Jpex.$instances.length).toBe(1);
-    expect(Class.$instances.length).toBe(0);
-    Class();
-    expect(Jpex.$instances.length).toBe(1);
-    expect(Class.$instances.length).toBe(1);
-  });
-  it("should not be mutatable", function () {
-    Jpex();
-    var instances = Jpex.$instances;
-    instances.push({});
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    expect(instances.length).toBe(2);
-    expect(Jpex.$instances.length).toBe(1);
-  });
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test("should have an $instances property", function (t) {
+  let {Jpex} = t.context;
+
+  t.not(Jpex.$instances, undefined);
+  t.is(Jpex.$instances.length, 0);
+});
+test("should add a new instance to the property", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex();
+  t.is(Jpex.$instances.length, 1);
+  Jpex();
+  t.is(Jpex.$instances.length, 2);
+});
+test("should not add indirect instances", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+
+  Jpex();
+  t.is(Jpex.$instances.length, 1);
+  t.is(Class.$instances.length, 0);
+  Class();
+  t.is(Jpex.$instances.length, 1);
+  t.is(Class.$instances.length, 1);
+});
+test("should not be mutatable", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex();
+  var instances = Jpex.$instances;
+  instances.push({});
+
+  t.is(instances.length, 2);
+  t.is(Jpex.$instances.length, 1);
 });

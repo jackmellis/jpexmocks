@@ -1,12 +1,26 @@
-module.exports = function () {
+module.exports = function ($promise) {
   var id = 0;
   function $timeout(callback, delay) {
+    var resolve, thisId = ++id, promise;
+
+    if (typeof callback !== 'function'){
+      delay = callback;
+      callback = function () {
+        resolve && resolve(thisId);
+        promise.flush();
+      };
+      promise = $promise(function (r) {
+        resolve = r;
+      });
+      promise.flush();
+    }
+
     $timeout.queue.push({
-      id : ++id,
+      id : thisId,
       callback : callback,
       delay : (delay || 0) + $timeout.elapsed
     });
-    return id;
+    return promise ? promise : thisId;
   }
   $timeout.clear = function (id) {
     var i = $timeout.queue.map(function (t) {
@@ -45,3 +59,4 @@ module.exports = function () {
   $timeout.elapsed = 0;
   return $timeout;
 };
+module.exports.dependencies = ['$promise'];

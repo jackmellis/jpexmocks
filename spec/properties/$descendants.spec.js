@@ -1,45 +1,60 @@
-describe("$descendants", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should have a $descendants property", function () {
-    expect(Jpex.$descendants).toBeDefined();
-    expect(Jpex.$descendants.length).toBe(0);
-  });
-  it("should add new children to the property", function () {
-    var Class = Jpex.extend();
-    var Class2 = Jpex.extend();
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    expect(Jpex.$descendants.length).toBe(2);
-    expect(Jpex.$descendants[0]).toBe(Class);
-    expect(Jpex.$descendants[1]).toBe(Class2);
-  });
-  it("should add children of children", function () {
-    var Class = Jpex.extend();
-      var Class3 = Class.extend();
-        var Class5 = Class3.extend();
-    var Class2 = Jpex.extend();
-      var Class4 = Class2.extend();
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
 
-    expect(Jpex.$descendants.length).toBe(5);
-    expect(Class.$descendants.length).toBe(2);
-    expect(Class2.$descendants.length).toBe(1);
-    expect(Class3.$descendants.length).toBe(1);
-    expect(Class4.$descendants.length).toBe(0);
-    expect(Class5.$descendants.length).toBe(0);
-  });
-  it("should not be mutatable", function () {
-    var Class = Jpex.extend();
+test("should have a $descendants property", function (t) {
+  let {Jpex} = t.context;
 
-    var descendants = Jpex.$descendants;
+  t.not(Jpex.$descendants, undefined);
+  t.is(Jpex.$descendants.length, 0);
+});
+test("should add new children to the property", function (t) {
+  let {Jpex} = t.context;
 
-    descendants.push({});
+  var Class = Jpex.extend();
+  var Class2 = Jpex.extend();
 
-    expect(descendants.length).toBe(2);
-    expect(Jpex.$descendants.length).toBe(1);
-  });
+  t.is(Jpex.$descendants.length, 2);
+  t.is(Jpex.$descendants[0], Class);
+  t.is(Jpex.$descendants[1], Class2);
+});
+test("should add children of children", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+    var Class3 = Class.extend();
+      var Class5 = Class3.extend();
+  var Class2 = Jpex.extend();
+    var Class4 = Class2.extend();
+
+  t.is(Jpex.$descendants.length, 5);
+  t.is(Class.$descendants.length, 2);
+  t.is(Class2.$descendants.length, 1);
+  t.is(Class3.$descendants.length, 1);
+  t.is(Class4.$descendants.length, 0);
+  t.is(Class5.$descendants.length, 0);
+});
+test("should not be mutatable", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+
+  var descendants = Jpex.$descendants;
+
+  descendants.push({});
+
+  t.is(descendants.length, 2);
+  t.is(Jpex.$descendants.length, 1);
 });

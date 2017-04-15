@@ -1,48 +1,72 @@
-describe("$inject", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should accept a callback function", function (done) {
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
+
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test("should accept a callback function", function (t) {
+  let {Jpex} = t.context;
+
+  return new Promise(resolve => {
     Jpex.$inject(function () {
-      done();
+      t.pass();
+      resolve();
     });
   });
-  it("should inject arguments", function (done) {
+});
+test("should inject arguments", function (t) {
+  let {Jpex} = t.context;
+
+  return new Promise(resolve => {
     Jpex.$inject(['path', 'fs'], function (path, fs) {
-      expect(path).toBe(require('path'));
-      expect(fs).toBe(require('fs'));
-      done();
+      t.is(path, require('path'));
+      t.is(fs, require('fs'));
+      resolve();
     });
   });
-  it("should extract arguments from the function", function (done) {
+});
+test("should extract arguments from the function", function (t) {
+  let {Jpex} = t.context;
+
+  return new Promise(resolve => {
     Jpex.$inject(function (path, fs) {
-      expect(path).toBe(require('path'));
-      expect(fs).toBe(require('fs'));
-      done();
+      t.is(path, require('path'));
+      t.is(fs, require('fs'));
+      resolve();
     });
   });
-  it("should use $set to overwrite dependencies", function () {
-    Jpex.$inject(function () {
-      return {
-        foo : () => 'bah'
-      };
-    });
+});
+test("should use $set to overwrite dependencies", function (t) {
+  let {Jpex} = t.context;
 
-    expect(Jpex.$get('foo')).toBe('bah');
+  Jpex.$inject(function () {
+    return {
+      foo : () => 'bah'
+    };
   });
-  it("should not overwrite dependencies not passed back", function () {
-    Jpex.register.constant('foo', 'bah');
-    Jpex.$inject(function (foo) {
-      expect(foo).toBe('bah');
-      return {
-        zoo : 'doo'
-      };
-    });
 
-    expect(Jpex.$get('foo')).toBe('bah');
+  t.is(Jpex.$get('foo'), 'bah');
+});
+test("should not overwrite dependencies not passed back", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.register.constant('foo', 'bah');
+  Jpex.$inject(function (foo) {
+    t.is(foo, 'bah');
+    return {
+      zoo : 'doo'
+    };
   });
+
+  t.is(Jpex.$get('foo'), 'bah');
 });

@@ -1,11 +1,24 @@
-module.exports = function () {
+module.exports = function ($promise) {
   var id = 0;
   function $immediate(callback) {
+    var resolve, thisId = ++id, promise;
+
+    if (typeof callback !== 'function'){
+      callback = function () {
+        resolve && resolve(thisId);
+        promise.flush();
+      };
+      promise = $promise(function (r) {
+        resolve = r;
+      });
+      promise.flush();
+    }
+
     $immediate.queue.push({
-      id : ++id,
+      id : thisId,
       callback : callback
     });
-    return id;
+    return promise ? promise : thisId;
   }
   $immediate.clear = function (id) {
     var i = $immediate.queue.map(function (t) {
@@ -27,3 +40,4 @@ module.exports = function () {
   $immediate.queue = [];
   return $immediate;
 };
+module.exports.dependencies = ['$promise'];

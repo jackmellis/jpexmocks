@@ -1,57 +1,92 @@
-describe("$timeout", function () {
-  var Jpex, plugin, $timeout;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-    $timeout = Jpex.$get('$timeout');
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should not set a real timeout", function (done) {
-    var spy = jasmine.createSpy();
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
+  let $timeout = Jpex.$get('$timeout');
+  t.context = {$timeout, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test("should not set a real timeout", function (t) {
+  return new Promise(resolve => {
+    let {sinon, $timeout} = t.context;
+
+    var spy = sinon.stub();
     $timeout(spy, 10);
 
     setTimeout(function () {
-      expect(spy).not.toHaveBeenCalled();
-      done();
+      t.false(spy.called);
+      resolve();
     }, 100);
   });
-  it("should flush a timeout", function () {
-    var spy = jasmine.createSpy();
-    $timeout(spy, 10);
-    $timeout.flush();
-    expect(spy).toHaveBeenCalled();
-  });
-  it("should clear a timeout", function () {
-    var spy = jasmine.createSpy();
-    var i = $timeout(spy, 10);
-    $timeout.clear(i);
-    $timeout.flush();
-    expect(spy).not.toHaveBeenCalled();
-  });
-  it("should flush multiple timeouts", function () {
-    var spy = jasmine.createSpy();
-    var spy2 = jasmine.createSpy();
-    $timeout(spy, 10);
-    $timeout(spy2, 20);
-    $timeout.flush();
-    expect(spy).toHaveBeenCalled();
-    expect(spy2).toHaveBeenCalled();
-  });
-  it("should count the number of outstanding items", function () {
-    $timeout(() => {}, 10);
-    $timeout(() => {}, 10);
-    expect($timeout.count()).toBe(2);
-  });
-  it("should not flush timeouts that haven't elapsed yet", function () {
-    $timeout.flush(900);
-    var spy = jasmine.createSpy();
-    $timeout(spy, 1000);
-    $timeout.flush(800);
-    expect(spy).not.toHaveBeenCalled();
-    $timeout.flush(100);
-    expect(spy).not.toHaveBeenCalled();
-    $timeout.flush(100);
-    expect(spy).toHaveBeenCalled();
-  });
+});
+test("should flush a timeout", function (t) {
+  let {sinon, $timeout} = t.context;
+
+  var spy = sinon.stub();
+  $timeout(spy, 10);
+  $timeout.flush();
+  t.true(spy.called);
+});
+test("should clear a timeout", function (t) {
+  let {sinon, $timeout} = t.context;
+
+  var spy = sinon.stub();
+  var i = $timeout(spy, 10);
+  $timeout.clear(i);
+  $timeout.flush();
+  t.false(spy.called);
+});
+test("should flush multiple timeouts", function (t) {
+  let {sinon, $timeout} = t.context;
+
+  var spy = sinon.stub();
+  var spy2 = sinon.stub();
+  $timeout(spy, 10);
+  $timeout(spy2, 20);
+  $timeout.flush();
+  t.true(spy.called);
+  t.true(spy2.called);
+});
+test("should count the number of outstanding items", function (t) {
+  let {sinon, $timeout} = t.context;
+
+  $timeout(() => {}, 10);
+  $timeout(() => {}, 10);
+  t.is($timeout.count(), 2);
+});
+test("should not flush timeouts that haven't elapsed yet", function (t) {
+  let {sinon, $timeout} = t.context;
+
+  $timeout.flush(900);
+  var spy = sinon.stub();
+  $timeout(spy, 1000);
+  $timeout.flush(800);
+  t.false(spy.called);
+  $timeout.flush(100);
+  t.false(spy.called);
+  $timeout.flush(100);
+  t.true(spy.called);
+});
+
+test('should return a promise', function (t) {
+  let {$timeout, sinon} = t.context;
+  let spy = sinon.spy();
+
+  $timeout(1000).then(spy);
+
+  t.false(spy.called);
+  $timeout.flush(100);
+  t.false(spy.called);
+  $timeout.flush(899);
+  t.false(spy.called);
+  $timeout.flush(1);
+  t.true(spy.called);
 });

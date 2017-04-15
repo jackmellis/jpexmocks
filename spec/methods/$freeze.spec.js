@@ -1,36 +1,52 @@
-describe("$freeze", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-    Jpex.register.factory('factory', function () {
-      return {};
-    });
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    expect(Jpex.$get('factory')).not.toBe(Jpex.$get('factory'));
+  Jpex.register.factory('factory', function () {
+    return {};
   });
 
-  it("should freeze a factory", function () {
-    var f = Jpex.$freeze('factory');
-    expect(f).toBe(Jpex.$get('factory'));
+  t.not(Jpex.$get('factory'), Jpex.$get('factory'));
+
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+
+test("should freeze a factory", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var f = Jpex.$freeze('factory');
+  t.is(f, Jpex.$get('factory'));
+});
+test("should freeze a dependency even if it doesn't exist", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var f = Jpex.$freeze('bob');
+  t.is(f, undefined);
+  t.is(Jpex.$get('bob'), undefined);
+});
+test("should freeze a factory under a different name", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var f = Jpex.$freeze('factory', 'bob');
+  t.not(f, Jpex.$get('factory'));
+  t.is(f, Jpex.$get('bob'));
+});
+test("should accept named parameters", function (t) {
+  let {Jpex, sinon} = t.context;
+  
+  Jpex.register.factory('factory', ['injected'], function (injected) {
+    return injected;
   });
-  it("should freeze a dependency even if it doesn't exist", function () {
-    var f = Jpex.$freeze('bob');
-    expect(f).toBeUndefined();
-    expect(Jpex.$get('bob')).toBeUndefined();
-  });
-  it("should freeze a factory under a different name", function () {
-    var f = Jpex.$freeze('factory', 'bob');
-    expect(f).not.toBe(Jpex.$get('factory'));
-    expect(f).toBe(Jpex.$get('bob'));
-  });
-  it("should accept named parameters", function () {
-    Jpex.register.factory('factory', ['injected'], function (injected) {
-      return injected;
-    });
-    var f = Jpex.$freeze('factory', {injected : 'fred'});
-    expect(f).toBe('fred');
-  });
+  var f = Jpex.$freeze('factory', {injected : 'fred'});
+  t.is(f, 'fred');
 });

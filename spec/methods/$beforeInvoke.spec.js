@@ -1,54 +1,71 @@
-describe("$beforeInvoke", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
+
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
+
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test("should error if no function provided", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  t.throws(() => Jpex.$beforeInvoke());
+});
+test("should call a function before invoking", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var order = [];
+  var spy1 = sinon.stub().callsFake(() => order.push(1));
+  var spy2 = sinon.stub().callsFake(() => order.push(2));
+  var Class = Jpex.extend(spy1);
+  Class.$beforeInvoke = (spy2);
+
+  Class();
+
+  t.true(spy1.called);
+  t.true(spy2.called);
+
+  t.deepEqual(order, [2, 1]);
+});
+test("should pass in the class's dependencies", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var spy = sinon.stub();
+  var path = require('path');
+  var Class = Jpex.extend({dependencies : 'path'});
+  Class.$beforeInvoke = (spy);
+  Class();
+
+  t.true(spy.calledWith(path));
+});
+test("should have the instance context", function (t) {
+  let {Jpex, sinon} = t.context;
+
+  var calledWith = {};
+  Jpex.$beforeInvoke = (function () {
+    calledWith = this;
   });
+  Jpex();
 
-  it("should error if no function provided", function () {
-    expect(() => Jpex.$beforeInvoke()).toThrow();
-  });
-  it("should call a function before invoking", function () {
-    var order = [];
-    var spy1 = jasmine.createSpy().and.callFake(() => order.push(1));
-    var spy2 = jasmine.createSpy().and.callFake(() => order.push(2));
-    var Class = Jpex.extend(spy1);
-    Class.$beforeInvoke = (spy2);
+  t.is(calledWith, Jpex.$instances[0]);
+});
+test("should not fire on child classes", function (t) {
+  let {Jpex, sinon} = t.context;
 
-    Class();
+  var called = false;
+  Jpex.$beforeInvoke = (() => called = true);
+  var Class = Jpex.extend();
 
-    expect(spy1).toHaveBeenCalled();
-    expect(spy2).toHaveBeenCalled();
-
-    expect(order).toEqual([2, 1]);
-  });
-  it("should pass in the class's dependencies", function () {
-    var spy = jasmine.createSpy();
-    var path = require('path');
-    var Class = Jpex.extend({dependencies : 'path'});
-    Class.$beforeInvoke = (spy);
-    Class();
-
-    expect(spy).toHaveBeenCalledWith(path);
-  });
-  it("should have the instance context", function () {
-    var calledWith = {};
-    Jpex.$beforeInvoke = (function () {
-      calledWith = this;
-    });
-    Jpex();
-
-    expect(calledWith).toBe(Jpex.$instances[0]);
-  });
-  it("should not fire on child classes", function () {
-    var called = false;
-    Jpex.$beforeInvoke = (() => called = true);
-    var Class = Jpex.extend();
-
-    Class();
-    expect(called).toBe(false);
-    Jpex();
-    expect(called).toBe(true);
-  });
+  Class();
+  t.is(called, false);
+  Jpex();
+  t.is(called, true);
 });

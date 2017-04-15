@@ -1,39 +1,54 @@
-describe("$children", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should have a $children property", function () {
-    expect(Jpex.$children).toBeDefined();
-    expect(Jpex.$children.length).toBe(0);
-  });
-  it("should add new children to the property", function () {
-    var Class = Jpex.extend();
-    var Class2 = Jpex.extend();
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    expect(Jpex.$children.length).toBe(2);
-    expect(Jpex.$children[0]).toBe(Class);
-    expect(Jpex.$children[1]).toBe(Class2);
-  });
-  it("should only add direct children", function () {
-    var Class = Jpex.extend();
-    var Class2 = Class.extend();
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
 
-    expect(Jpex.$children.length).toBe(1);
-    expect(Jpex.$children[0]).toBe(Class);
-    expect(Class.$children[0]).toBe(Class2);
-  });
-  it("should not be mutatable", function () {
-    var Class = Jpex.extend();
+test("should have a $children property", function (t) {
+  let {Jpex} = t.context;
 
-    var children = Jpex.$children;
+  t.not(Jpex.$children, undefined);
+  t.is(Jpex.$children.length, 0);
+});
+test("should add new children to the property", function (t) {
+  let {Jpex} = t.context;
 
-    children.push({});
+  var Class = Jpex.extend();
+  var Class2 = Jpex.extend();
 
-    expect(children.length).toBe(2);
-    expect(Jpex.$children.length).toBe(1);
-  });
+  t.is(Jpex.$children.length, 2);
+  t.is(Jpex.$children[0], Class);
+  t.is(Jpex.$children[1], Class2);
+});
+test("should only add direct children", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+  var Class2 = Class.extend();
+
+  t.is(Jpex.$children.length, 1);
+  t.is(Jpex.$children[0], Class);
+  t.is(Class.$children[0], Class2);
+});
+test("should not be mutatable", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+
+  var children = Jpex.$children;
+
+  children.push({});
+
+  t.is(children.length, 2);
+  t.is(Jpex.$children.length, 1);
 });

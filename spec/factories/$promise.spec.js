@@ -1,275 +1,274 @@
-describe('$promise', function(){
-  var Jpex, Master, Mock, constructor, $promise, plugin;
+import test from 'ava-spec';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  beforeEach(function(){
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-    Master = Jpex.extend(function($promise){
-      constructor($promise);
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
+  let $promise = Jpex.$get('$promise');
+  t.context = {$promise, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test('should inject a mock promise factory', function(t){
+  let {$promise, sinon} = t.context;
+
+  t.not($promise, undefined);
+  t.not($promise.flush, undefined);
+});
+
+test.group('$promise', function(test){
+  test('should create and resolve a promise', function(t){
+    let {$promise, sinon} = t.context;
+
+    var result;
+
+    $promise(function(resolve){
+      resolve('tada');
+    })
+    .then(function(data){
+      result = data;
     });
-    constructor = function(){};
 
-    $promise = Master.$get('$promise');
+    $promise.flush();
+
+    t.is(result, 'tada');
   });
+  test('should create and reject a promise', function(t){
+    let {$promise, sinon} = t.context;
 
-  it('should inject a mock promise factory', function(){
-    constructor = function($promise){
-      expect($promise).toBeDefined();
-      expect($promise.flush).toBeDefined();
-    };
-    new Master();
+    sinon.stub(console, 'log');
+
+    var result = $promise(function(resolve, reject){
+      reject('error');
+    });
+    $promise.flush();
+    t.is(result.state, 'rejected');
+    t.true(console.log.called);
   });
+  test('should catch a rejected promise', function(t){
+    let {$promise, sinon} = t.context;
 
-  describe('$promise', function(){
-    it('should create and resolve a promise', function(){
-      var result;
+    var result;
 
-      constructor = function($promise){
-        $promise(function(resolve){
-          resolve('tada');
-        })
-        .then(function(data){
-          result = data;
-        });
-      };
-      new Master();
-
-      $promise.flush();
-
-      expect(result).toBe('tada');
+    $promise(function(resolve, reject){
+      reject('error');
+    })
+    .catch(function(data){
+      result = data;
     });
-    it('should create and reject a promise', function(){
-      spyOn(console, 'log');
-      constructor = function($promise){
-        var result = $promise(function(resolve, reject){
-          reject('error');
-        });
-        $promise.flush();
-        expect(result.state).toBe('rejected');
-        expect(console.log).toHaveBeenCalled();
-      };
-      new Master();
+
+    $promise.flush();
+
+    t.is(result, 'error');
+  });
+  test('should not log a rejected promise caught by another promise...', function(t) {
+    let {$promise, sinon} = t.context;
+
+    sinon.stub(console, 'log');
+    var rej;
+    var result2 = $promise(function (resolve, reject) {
+      rej = reject;
     });
-    it('should catch a rejected promise', function(){
-      var result;
+    var result = $promise.resolve()
+    .then(function () {
+       return result2;
+    })
+    .catch(function () {
 
-      constructor = function($promise){
-        $promise(function(resolve, reject){
-          reject('error');
-        })
-        .catch(function(data){
-          result = data;
-        });
-      };
-      new Master();
-
-      $promise.flush();
-
-      expect(result).toBe('error');
     });
-    it('should not log a rejected promise caught by another promise...', function () {
-      spyOn(console, 'log');
-      constructor = function ($promise) {
-        var rej;
-        var result2 = $promise(function (resolve, reject) {
-          rej = reject;
-        });
-        var result = $promise.resolve()
-        .then(function () {
-           return result2;
-        })
-        .catch(function () {
 
-        });
+    $promise.flush();
+    rej();
+    $promise.flush();
 
-        $promise.flush();
-        rej();
-        $promise.flush();
+    t.is(result2.state, 'rejected');
+    t.is(result.state, 'fulfilled');
+    t.false(console.log.called);
+  });
+  test('should not resolve the promise until flushed', function(t){
+    let {$promise, sinon} = t.context;
 
-        expect(result2.state).toBe('rejected');
-        expect(result.state).toBe('fulfilled');
-        expect(console.log).not.toHaveBeenCalled();
-      };
-      new Master();
+    var result;
+
+    $promise(function(resolve){
+      resolve('tada');
+    })
+    .then(function(data){
+      result = data;
     });
-    it('should not resolve the promise until flushed', function(){
-      var result;
 
-      constructor = function($promise){
-        $promise(function(resolve){
-          resolve('tada');
-        })
-        .then(function(data){
-          result = data;
-        });
-      };
-      new Master();
+    t.is(result, undefined);
 
-      expect(result).toBe(undefined);
+    $promise.flush();
 
-      $promise.flush();
+    t.is(result, 'tada');
+  });
+  test('should chain multiple then statements', function(t){
+    let {$promise, sinon} = t.context;
 
-      expect(result).toBe('tada');
+    var result;
+
+    $promise(function(resolve){
+      resolve('a');
+    })
+    .then(function(str){
+      return str + 'b';
+    })
+    .then(function(str){
+      return str + 'c';
+    })
+    .then(function(str){
+      result = str;
     });
-    it('should chain multiple then statements', function(){
-      var result;
+    $promise.flush();
 
-      constructor = function($promise){
-        $promise(function(resolve){
-          resolve('a');
-        })
-        .then(function(str){
-          return str + 'b';
-        })
-        .then(function(str){
-          return str + 'c';
-        })
-        .then(function(str){
-          result = str;
-        });
-      };
-      new Master();
-      $promise.flush();
+    t.is(result, 'abc');
+  });
+  test('should skip all thens until a catch is encountered', function(t){
+    let {$promise, sinon} = t.context;
 
-      expect(result).toBe('abc');
+    var callCount = 0;
+
+    $promise(function(resolve){
+      callCount++;
+      resolve();
+    })
+    .then(function(){
+      callCount++;
+      throw new Error('Uhoh');
+    })
+    .then(function(){
+      callCount++;
+    })
+    .then(function(){
+      callCount++;
+    })
+    .catch(function(){
+      callCount++;
+    })
+    .then(function(){
+      callCount++;
     });
-    it('should skip all thens until a catch is encountered', function(){
-      var callCount = 0;
+    $promise.flush();
 
-      constructor = function($promise){
-        $promise(function(resolve){
+    t.is(callCount, 4);
+  });
+  test('should flush promises made within promises', function(t){
+    let {$promise, sinon} = t.context;
+
+    var callCount = 0;
+
+    $promise(function(resolve){
+      callCount++;
+      return $promise(function(resolve2, reject2){
+        callCount++;
+        reject2();
+      })
+      .catch(function(){
+        callCount++;
+        return $promise(function(resolve3){
+          callCount++;
+          resolve3();
+        })
+        .then(function(){
           callCount++;
           resolve();
-        })
-        .then(function(){
-          callCount++;
-          throw new Error('Uhoh');
-        })
-        .then(function(){
-          callCount++;
-        })
-        .then(function(){
-          callCount++;
-        })
-        .catch(function(){
-          callCount++;
-        })
-        .then(function(){
-          callCount++;
         });
-      };
-
-      new Master();
-      $promise.flush();
-
-      expect(callCount).toBe(4);
-    });
-    it('should flush promises made within promises', function(){
-      var callCount = 0;
-      constructor = function($promise){
-        return $promise(function(resolve){
-          callCount++;
-          return $promise(function(resolve2, reject2){
-            callCount++;
-            reject2();
-          })
-          .catch(function(){
-            callCount++;
-            return $promise(function(resolve3){
-              callCount++;
-              resolve3();
-            })
-            .then(function(){
-              callCount++;
-              resolve();
-            });
-          });
-        })
-        .then(function(){
-          callCount++;
-        });
-      };
-
-      new Master();
-      $promise.flush();
-
-      expect(callCount).toBe(6);
-    });
-    it('should not resolve then statements of unresolved promises', function(){
-      var callCount = 0;
-      constructor = function($promise){
-        $promise(function(){
-          callCount++;
-        })
-        .then(function(){
-          callCount++;
-        })
-        .then(function(){
-          callCount++;
-        });
-      };
-
-      new Master();
-      $promise.flush();
-
-      expect(callCount).toBe(1);
-    });
-    it('should pick up unresolved then statements on the next pass', function(){
-      var resolver;
-      var callCount = 0;
-
-      constructor = function($promise){
-        $promise(function(resolve){
-          callCount++;
-          resolver = resolve;
-        })
-        .then(function(){
-          callCount++;
-        })
-        .then(function(){
-          callCount++;
-        });
-      };
-
-      new Master();
-      $promise.flush();
-
-      expect(callCount).toBe(1);
-
-      resolver();
-
-      $promise.flush();
-
-      expect(callCount).toBe(3);
-    });
-
-    it('should flush promises added to a completed promise', function(){
-      var p = $promise(resolve => resolve(1));
-      $promise.flush();
-
-      var result;
-      p.then(d => {
-        result = d + 1
       });
-      $promise.flush();
-
-      expect(result).toBe(2);
+    })
+    .then(function(){
+      callCount++;
     });
-    it('should flush promises added to a rejected promise', function(){
-      spyOn(console, 'log');
-      var p = $promise((resolve, reject) => reject(1));
-      $promise.flush();
-      var result;
-      p
-        .then(d => result = d * 10)
-        .catch(d => result = d + 1);
-      $promise.flush();
 
-      expect(result).toBe(2);
+    $promise.flush();
+
+    t.is(callCount, 6);
+  });
+  test('should not resolve then statements of unresolved promises', function(t){
+    let {$promise, sinon} = t.context;
+
+    var callCount = 0;
+
+    $promise(function(){
+      callCount++;
+    })
+    .then(function(){
+      callCount++;
+    })
+    .then(function(){
+      callCount++;
     });
-    it('should accept a real promise within a fake promise', function (done) {
-      var spy = jasmine.createSpy();
+
+    $promise.flush();
+
+    t.is(callCount, 1);
+  });
+  test('should pick up unresolved then statements on the next pass', function(t){
+    let {$promise, sinon} = t.context;
+
+    var resolver;
+    var callCount = 0;
+
+    $promise(function(resolve){
+      callCount++;
+      resolver = resolve;
+    })
+    .then(function(){
+      callCount++;
+    })
+    .then(function(){
+      callCount++;
+    });
+
+    $promise.flush();
+
+    t.is(callCount, 1);
+
+    resolver();
+
+    $promise.flush();
+
+    t.is(callCount, 3);
+  });
+
+  test('should flush promises added to a completed promise', function(t){
+    let {$promise, sinon} = t.context;
+
+    var p = $promise(resolve => resolve(1));
+    $promise.flush();
+
+    var result;
+    p.then(d => {
+      result = d + 1
+    });
+    $promise.flush();
+
+    t.is(result, 2);
+  });
+  test('should flush promises added to a rejected promise', function(t){
+    let {$promise, sinon} = t.context;
+
+    sinon.stub(console, 'log');
+    var p = $promise((resolve, reject) => reject(1));
+    $promise.flush();
+    var result;
+    p
+      .then(d => result = d * 10)
+      .catch(d => result = d + 1);
+    $promise.flush();
+
+    t.is(result, 2);
+  });
+  test('should accept a real promise within a fake promise', function (t) {
+    return new Promise(resolve => {
+      let {$promise, sinon} = t.context;
+
+      var spy = sinon.stub();
       var p = $promise(function (resolve) {
         return $promise.resolve().then(function () {
           return Promise.resolve().then(function () {
@@ -284,162 +283,178 @@ describe('$promise', function(){
 
       $promise.flush();
 
-      expect(spy).not.toHaveBeenCalled();
+      t.false(spy.called);
 
       setTimeout(function () {
-        expect(spy).not.toHaveBeenCalled();
+        t.false(spy.called);
         $promise.flush();
         setTimeout(function () {
-          expect(spy).toHaveBeenCalled();
-          done();
+          t.true(spy.called);
+          resolve();
         }, 5);
       }, 5);
     });
   });
+});
 
-  describe('Resolve', function(){
-    it('should return a resolved promise', function(){
-      var result;
-      $promise.resolve(1234)
-      .then(function(v){
-        result = v;
-      });
-      $promise.flush();
+test.group('Resolve', function(test){
+  test('should return a resolved promise', function(t){
+    let {$promise, sinon} = t.context;
 
-      expect(result).toBe(1234);
+    var result;
+    $promise.resolve(1234)
+    .then(function(v){
+      result = v;
     });
+    $promise.flush();
+
+    t.is(result, 1234);
+  });
+});
+
+test.group('Reject', function(test){
+  test('should return a rejected promise', function(t){
+    let {$promise, sinon} = t.context;
+
+    var result;
+    $promise.reject(1234)
+    .catch(function(v){
+      result = v;
+    });
+    $promise.flush();
+
+    t.is(result, 1234);
+  });
+});
+
+test.group('All', function(test){
+  test('should resolve all promises and return the results', function(t){
+    let {$promise, sinon} = t.context;
+
+    var result;
+    var expected = [1234, 5678, 9999];
+    var arr = [
+      $promise.resolve(1234),
+      $promise(function(resolve){
+        return $promise(function(resolve2){
+          resolve2(5678);
+        })
+        .then(resolve);
+      }),
+      9999
+    ];
+
+    $promise.all(arr)
+    .then(function(r){
+      result = r;
+    });
+
+    $promise.flush();
+
+    t.deepEqual(result, expected);
+  });
+  test('should stop if any promises are rejected', function(t){
+    let {$promise, sinon} = t.context;
+
+    sinon.stub(console, 'log');
+    var result;
+    var expected = 0;
+    var arr = [
+      $promise.reject(0),
+      $promise.resolve(1234),
+      $promise(function(resolve){
+        return $promise(function(resolve2){
+          resolve2(5678);
+        })
+        .then(resolve);
+      }),
+      9999
+    ];
+
+    $promise.all(arr)
+    .catch(function(err){
+      result = err;
+    });
+
+    $promise.flush();
+
+    t.deepEqual(result, expected);
   });
 
-  describe('Reject', function(){
-    it('should return a rejected promise', function(){
-      var result;
-      $promise.reject(1234)
-      .catch(function(v){
-        result = v;
-      });
-      $promise.flush();
+  test('should resolve multiple promises', function(t){
+    let {$promise, sinon} = t.context;
 
-      expect(result).toBe(1234);
+    var resolved;
+
+    $promise.all([
+      $promise(resolve => resolve()),
+      $promise(resolve => resolve()),
+      $promise(resolve => resolve()).then(() => true)
+    ])
+    .then(function(){
+      resolved = true;
     });
+
+    $promise.flush();
+
+    t.is(resolved, true);
   });
+});
 
-  describe('All', function(){
-    it('should resolve all promises and return the results', function(){
-      var result;
-      var expected = [1234, 5678, 9999];
-      var arr = [
-        $promise.resolve(1234),
-        $promise(function(resolve){
-          return $promise(function(resolve2){
-            resolve2(5678);
-          })
-          .then(resolve);
-        }),
-        9999
-      ];
+test.group('Race', function(test){
+  test('should stop as soon as any promise is resolved', function(t){
+    let {$promise, sinon} = t.context;
 
-      $promise.all(arr)
-      .then(function(r){
-        result = r;
-      });
+    var result;
+    var expected = 88;
+    var arr = [
+      $promise(function(){}),
+      $promise(function(){}),
+      $promise(function(resolve){
+        resolve(88);
+      }),
+      $promise(function(){})
+    ];
 
-      $promise.flush();
-
-      expect(result).toEqual(expected);
-    });
-    it('should stop if any promises are rejected', function(){
-      spyOn(console, 'log');
-      var result;
-      var expected = 0;
-      var arr = [
-        $promise.reject(0),
-        $promise.resolve(1234),
-        $promise(function(resolve){
-          return $promise(function(resolve2){
-            resolve2(5678);
-          })
-          .then(resolve);
-        }),
-        9999
-      ];
-
-      $promise.all(arr)
-      .catch(function(err){
-        result = err;
-      });
-
-      $promise.flush();
-
-      expect(result).toEqual(expected);
+    $promise.race(arr)
+    .then(function(val){
+      result = val;
     });
 
-    it('should resolve multiple promises', function(){
-      var resolved;
+    $promise.flush();
 
-      $promise.all([
-        $promise(resolve => resolve()),
-        $promise(resolve => resolve()),
-        $promise(resolve => resolve()).then(() => true)
-      ])
-      .then(function(){
-        resolved = true;
-      });
-
-      $promise.flush();
-
-      expect(resolved).toBe(true);
-    });
+    t.is(result, expected);
   });
+  test('should stop as soon as any promise is rejected', function(t){
+    let {$promise, sinon} = t.context;
 
-  describe('Race', function(){
-    it('should stop as soon as any promise is resolved', function(){
-      var result;
-      var expected = 88;
-      var arr = [
-        $promise(function(){}),
-        $promise(function(){}),
-        $promise(function(resolve){
-          resolve(88);
-        }),
-        $promise(function(){})
-      ];
+    sinon.stub(console, 'log');
+    var result;
+    var expected = 99;
+    var arr = [
+      $promise(function(){}),
+      $promise(function(resolve, reject){
+        reject(99);
+      }),
+      $promise(function(resolve){
+        resolve(88);
+      }),
+      $promise(function(){})
+    ];
 
-      $promise.race(arr)
-      .then(function(val){
-        result = val;
-      });
-
-      $promise.flush();
-
-      expect(result).toBe(expected);
+    $promise.race(arr)
+    .catch(function(val){
+      result = val;
     });
-    it('should stop as soon as any promise is rejected', function(){
-      spyOn(console, 'log');
-      var result;
-      var expected = 99;
-      var arr = [
-        $promise(function(){}),
-        $promise(function(resolve, reject){
-          reject(99);
-        }),
-        $promise(function(resolve){
-          resolve(88);
-        }),
-        $promise(function(){})
-      ];
 
-      $promise.race(arr)
-      .catch(function(val){
-        result = val;
-      });
+    $promise.flush();
 
-      $promise.flush();
-
-      expect(result).toBe(expected);
-    });
+    t.is(result, expected);
   });
+});
 
-  it('should reset the number of promises between tests', function(){
-    expect($promise.promises.length).toBe(0);
-  });
+test('should reset the number of promises between tests', function(t){
+  let {$promise, sinon} = t.context;
+
+  t.is($promise.promises.length, 0);
 });

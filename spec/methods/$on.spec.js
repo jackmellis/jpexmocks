@@ -1,17 +1,26 @@
-describe("$on", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex=  require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should add an event listener", function () {
-    var spy = jasmine.createSpy();
-    Jpex.$on('created', spy);
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    Jpex();
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
 
-    expect(spy).toHaveBeenCalled();
-  });
+test("should add an event listener", function (t) {
+  let {sinon, Jpex} = t.context;
+
+  var spy = sinon.spy();
+  Jpex.$on('created', spy);
+
+  Jpex();
+
+  t.true(spy.called);
 });

@@ -1,87 +1,108 @@
-describe("$autoStub", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-    Jpex.register.factory('factory', function () {
-      function result() {
-        throw new Error();
-      }
-      result.method = function () {
-        throw new Error();
-      };
-      return result;
-    });
-    Jpex.register.service('service', function () {
-      this.method = function () {
-        throw new Error();
-      }
-    });
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    expect(() => Jpex.$get('factory')()).toThrow();
-    expect(() => Jpex.$get('service').method()).toThrow();
-
-    Jpex.$autoStub = true;
-  });
-
-  it("should automatically stub all dependencies", function () {
-    var f = Jpex.$get('factory');
-    expect(() => f()).not.toThrow();
-    expect(() => f.method()).not.toThrow();
-  });
-
-  it("should not stub mock factories created with $set", function () {
-    Jpex.$set('factory', function () {
-      return function () {
-        throw new Error();
-      };
-    });
-
-    var f = Jpex.$get('factory');
-    expect(() => f()).toThrow();
-  });
-
-  it("should not stub excluded factories", function () {
-    Jpex.$autoStub = {
-      exclude : ['service']
+  Jpex.register.factory('factory', function () {
+    function result() {
+      throw new Error();
+    }
+    result.method = function () {
+      throw new Error();
     };
-
-    expect(() => Jpex.$get('factory')()).not.toThrow();
-    expect(() => Jpex.$get('service').method()).toThrow();
+    return result;
+  });
+  Jpex.register.service('service', function () {
+    this.method = function () {
+      throw new Error();
+    }
   });
 
-  it("should not stub non-included factories", function () {
-    Jpex.$autoStub = {
-      include : ['service']
+  t.throws(() => Jpex.$get('factory')());
+  t.throws(() => Jpex.$get('service').method());
+
+  Jpex.$autoStub = true;
+
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
+
+test("should automatically stub all dependencies", function (t) {
+  let {Jpex} = t.context;
+
+  var f = Jpex.$get('factory');
+  t.notThrows(() => f());
+  t.notThrows(() => f.method());
+});
+
+test("should not stub mock factories created with $set", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.$set('factory', function () {
+    return function () {
+      throw new Error();
     };
-
-    expect(() => Jpex.$get('factory')()).toThrow();
-    expect(() => Jpex.$get('service').method()).not.toThrow();
   });
 
-  it("should not stub if autoStub is disabled", function () {
-    Jpex.$autoStub = false;
+  var f = Jpex.$get('factory');
+  t.throws(() => f());
+});
 
-    expect(() => Jpex.$get('factory')()).toThrow();
-    expect(() => Jpex.$get('service').method()).toThrow();
+test("should not stub excluded factories", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.$autoStub = {
+    exclude : ['service']
+  };
+
+  t.notThrows(() => Jpex.$get('factory')());
+  t.throws(() => Jpex.$get('service').method());
+});
+
+test("should not stub non-included factories", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.$autoStub = {
+    include : ['service']
+  };
+
+  t.throws(() => Jpex.$get('factory')());
+  t.notThrows(() => Jpex.$get('service').method());
+});
+
+test("should not stub if autoStub is disabled", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.$autoStub = false;
+
+  t.throws(() => Jpex.$get('factory')());
+  t.throws(() => Jpex.$get('service').method());
+});
+
+test("should inherit", function (t) {
+  let {Jpex} = t.context;
+
+  var Class = Jpex.extend();
+  Class.register.factory('factory', function () {
+    return function () {
+      throw new Error();
+    }
   });
 
-  it("should inherit", function () {
-    var Class = Jpex.extend();
-    Class.register.factory('factory', function () {
-      return function () {
-        throw new Error();
-      }
-    });
+  t.notThrows(() => Jpex.$get('factory')());
+});
 
-    expect(() => Jpex.$get('factory')()).not.toThrow();
-  });
+test("should stub node modules", function (t) {
+  let {Jpex} = t.context;
 
-  it("should stub node modules", function () {
-    var path = Jpex.$get('path');
-    path.dirname();
-    expect(path.dirname).toHaveBeenCalled();
-  });
+  var path = Jpex.$get('path');
+  path.dirname();
+  t.true(path.dirname.called);
 });

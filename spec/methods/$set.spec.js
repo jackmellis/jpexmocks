@@ -1,57 +1,76 @@
-describe("$set", function () {
-  var Jpex, plugin;
-  beforeEach(function () {
-    Jpex = require('jpex').extend();
-    plugin = require('../../src');
-    Jpex.use(plugin);
-  });
+import test from 'ava';
+import Sinon from 'sinon';
+import jpex from 'jpex';
+import plugin from '../../src';
 
-  it("should set a factory", function () {
-    Jpex.register.factory('factory', () => 'real');
-    expect(Jpex.$get('factory')).toBe('real');
+test.beforeEach(function (t) {
+  let sinon = Sinon.sandbox.create();
+  let Jpex = jpex.extend();
+  Jpex.use(plugin);
 
-    Jpex.$set('factory', function (path) {
-      expect(path).toBe(require('path'));
-      return 'fake';
-    });
-    expect(Jpex.$get('factory')).toBe('fake');
-  });
-  it("should be inheritable", function () {
-    Jpex.$set('factory', function (path) {
-      expect(path).toBe(require('path'));
-      return 'fake';
-    });
-    var Class = Jpex.extend();
-    Class.register.factory('factory', () => 'real');
-    expect(Class.$get('factory')).toBe('fake');
-  });
-  it("should set a constant", function () {
-    Jpex.register.constant('constant', 'real');
-    expect(Jpex.$get('constant')).toBe('real');
+  t.context = {Jpex, sinon};
+});
+test.afterEach(function (t) {
+  t.context.sinon.restore();
+});
 
-    Jpex.$set('constant', 'fake');
-    expect(Jpex.$get('constant')).toBe('fake');
-  });
-  it("should not overwrite a factory registered on the class", function () {
-    Jpex.register.constant('foo', 'bah');
-    var f = Jpex.$$factories.foo;
+test("should set a factory", function (t) {
+  let {Jpex} = t.context;
 
-    Jpex.$set('foo', 'boo');
+  Jpex.register.factory('factory', () => 'real');
+  t.is(Jpex.$get('factory'), 'real');
 
-    expect(Jpex.$$factories.foo).toBe(f);
+  Jpex.$set('factory', function (path) {
+    t.is(path, require('path'));
+    return 'fake';
   });
-  it("should not overwrite an inherited factory", function () {
-    Jpex.register.constant('foo', 'bah');
-    var Class = Jpex.extend();
+  t.is(Jpex.$get('factory'), 'fake');
+});
+test("should be inheritable", function (t) {
+  let {Jpex} = t.context;
 
-    var f = Jpex.$$factories.foo;
-    Jpex.$set('foo', 'boo');
+  Jpex.$set('factory', function (path) {
+    t.is(path, require('path'));
+    return 'fake';
+  });
+  var Class = Jpex.extend();
+  Class.register.factory('factory', () => 'real');
+  t.is(Class.$get('factory'), 'fake');
+});
+test("should set a constant", function (t) {
+  let {Jpex} = t.context;
 
-    expect(Jpex.$$factories.foo).toBe(f);
-    expect(Object.hasOwnProperty.call(Jpex.$$factories)).toBe(false);
-  });
-  it("should not store the factory directly on the class", function () {
-    Jpex.$set('foo', 'boo');
-    expect(Jpex.$$factories.foo).toBeUndefined();
-  });
+  Jpex.register.constant('constant', 'real');
+  t.is(Jpex.$get('constant'), 'real');
+
+  Jpex.$set('constant', 'fake');
+  t.is(Jpex.$get('constant'), 'fake');
+});
+test("should not overwrite a factory registered on the class", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.register.constant('foo', 'bah');
+  var f = Jpex.$$factories.foo;
+
+  Jpex.$set('foo', 'boo');
+
+  t.is(Jpex.$$factories.foo, f);
+});
+test("should not overwrite an inherited factory", function (t) {
+  let {Jpex} = t.context;
+
+  Jpex.register.constant('foo', 'bah');
+  var Class = Jpex.extend();
+
+  var f = Jpex.$$factories.foo;
+  Jpex.$set('foo', 'boo');
+
+  t.is(Jpex.$$factories.foo, f);
+  t.is(Object.hasOwnProperty.call(Jpex.$$factories), false);
+});
+test("should not store the factory directly on the class", function (t) {
+  let {Jpex} = t.context;
+  
+  Jpex.$set('foo', 'boo');
+  t.is(Jpex.$$factories.foo, undefined);
 });

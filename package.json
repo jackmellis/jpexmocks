@@ -1,11 +1,11 @@
 {
   "name": "jpex-mocks",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Mocking Library for Jpex",
   "main": "src/index.js",
   "scripts": {
-    "test": "jasmine",
-    "coverage": "nyc jasmine",
+    "test": "ava",
+    "coverage": "nyc ava",
     "build": "node node_modules/jpex-build-tools/build --entry ./src --output ./dist/jpex-mocks.js --name jpexMocks && node node_modules/jpex-build-tools/build --entry ./src/defaults --output ./dist/jpex-mock-factories.js --name jpexMockFactories",
     "lcov-fix": "node node_modules/jpex-build-tools/lcov-fix",
     "travis-prepublish": "node node_modules/jpex-build-tools/travis-prepublish",
@@ -13,6 +13,15 @@
     "publish-please": "publish-please",
     "prepublish": "publish-please guard",
     "build-jpex": "cd ../jpex && npm install && npm run build"
+  },
+  "ava": {
+    "files": [
+      "spec/**/*.spec.js"
+    ],
+    "source": [
+      "src/**/*.js"
+    ],
+    "concurrency": 8
   },
   "repository": {
     "type": "git",
@@ -25,13 +34,15 @@
   },
   "homepage": "https://jpex-js.github.io/plugins/jpex-mocks",
   "devDependencies": {
+    "ava": "^0.19.1",
+    "ava-spec": "^1.1.0",
     "eslint": "^3.15.0",
-    "jasmine": "^2.5.3",
     "jpex": "^2.0.0",
     "jpex-build-tools": "git+https://github.com/jackmellis/jpex-build-tools.git",
     "jpex-defaults": "^2.0.0",
     "nyc": "^10.1.2",
-    "publish-please": "^2.2.0"
+    "publish-please": "^2.2.0",
+    "sinon": "^2.1.0"
   },
   "peerDependencies": {
     "jpex": "^2.0.0"
