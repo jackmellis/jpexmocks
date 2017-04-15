@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+## 2.1.0
+- $timeout and $immediate both return a promise if no callback provided, as per v2.1 of *jpex-defaults*
+
 ## 2.0.1
 - Fixed a bug where `$promise` was attempting to `flush` *real* promises that don't have a `flush` method.  
 - Fixed a bug where `$promise` was outputting a warning when a promise was rejected, even if it was then caught by another promise.
